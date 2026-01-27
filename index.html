@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Solar Site Survey Form - Fast and intuitive mobile form">
+    <meta name="theme-color" content="#2c3e50">
+    
+    <!-- Apple iOS PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Solar Survey">
+    
+    <!-- Apple Touch Icons for different devices -->
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="apple-touch-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="apple-touch-icon-167x167.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    
+    <!-- Safari Pinned Tab Icon -->
+    <link rel="mask-icon" href="icon-192.png" color="#2c3e50">
+    
+    <!-- iOS Splash Screens -->
+    <!-- iPhone SE -->
+    <link rel="apple-touch-startup-image" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)" href="splash-iphone-se.png">
+    <!-- iPhone 6/7/8 -->
+    <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" href="splash-iphone-678.png">
+    <!-- iPhone 6/7/8 Plus -->
+    <link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)" href="splash-iphone-678-plus.png">
+    <!-- iPhone X/XS -->
+    <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" href="splash-iphone-x-xs.png">
+    <!-- iPhone XR -->
+    <link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" href="splash-iphone-xr.png">
+    <!-- iPhone XS Max -->
+    <link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" href="splash-iphone-xs-max.png">
+    <!-- iPad -->
+    <link rel="apple-touch-startup-image" media="(device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2)" href="splash-ipad.png">
+    <!-- iPad Pro 10.5" -->
+    <link rel="apple-touch-startup-image" media="(device-width: 834px) and (device-height: 1112px) and (-webkit-device-pixel-ratio: 2)" href="splash-ipad-pro-105.png">
+    <!-- iPad Pro 12.9" -->
+    <link rel="apple-touch-startup-image" media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2)" href="splash-ipad-pro-129.png">
+    
+    <title>Solar Site Survey</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header with Progress -->
+        <header class="header">
+            <div class="header-brand">
+                <img src="public/viking-logo.webp" alt="Viking Tools" class="header-logo header-logo-main">
+                <h1>Solar Site Survey</h1>
+                <div class="header-trust-badges">
+                    <img src="public/Trusted-Partner-Logo.webp" alt="Trusted Partner" class="header-logo header-logo-badge">
+                    <img src="public/Which Trusted Trader logo.webp" alt="Which? Trusted Trader" class="header-logo header-logo-badge">
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text"><span id="progressText">0%</span> Complete</div>
+        </header>
+
+        <!-- Navigation Menu -->
+        <nav class="nav-menu" id="navMenu">
+            <button class="nav-toggle" id="navToggle">☰ Sections</button>
+            <div class="nav-items" id="navItems">
+                <a href="#inhome" class="nav-item nav-item-highlight">🏠 In-Home</a>
+                <a href="#surveyor" class="nav-item">Surveyor Info</a>
+                <a href="#property" class="nav-item">Property Details</a>
+                <a href="#building" class="nav-item">Building</a>
+                <a href="#roof" class="nav-item">Roof Aspects</a>
+                <a href="#electrical" class="nav-item">Electrical</a>
+                <a href="#inverter" class="nav-item">Inverter & System</a>
+                <a href="#notes" class="nav-item">Notes & Photos</a>
+            </div>
+        </nav>
+
+        <!-- Auto-save Indicator -->
+        <div class="save-indicator" id="saveIndicator">
+            <span class="save-text">Saved</span>
+        </div>
+
+        <form id="surveyForm">
+            <!-- Job Selection Section -->
+            <section id="jobSelect" class="form-section job-section">
+                <div class="job-header">
+                    <button type="button" class="btn-job-select" id="selectJobBtn" onclick="if(!window.appLoaded){alert('Please run start-server.bat and open http://localhost:8000');}">
+                        <span class="job-icon">📋</span>
+                        Select Job
+                    </button>
+                    <div class="job-info" id="jobInfo" style="display: none;">
+                        <div class="job-ref" id="jobRefDisplay"></div>
+                        <button type="button" class="btn-job-clear" id="clearJobBtn" title="Clear job">×</button>
+                    </div>
+                </div>
+                <div class="equipment-summary" id="equipmentSummary" style="display: none;">
+                    <h4>Equipment</h4>
+                    <pre id="equipmentText"></pre>
+                </div>
+            </section>
+
+            <!-- In-Home Survey Section -->
+            <section id="inhome" class="form-section inhome-section">
+                <h2>🏠 In-Home Survey</h2>
+                <p class="section-hint">Complete these while at the property - start in loft, work down</p>
+
+                <!-- Loft -->
+                <div class="inhome-group">
+                    <h3>Loft</h3>
+
+                    <div class="form-group">
+                        <label>Loft Floored:</label>
+                        <div class="inhome-row">
+                            <div class="button-group">
+                                <button type="button" class="btn-choice" data-field="inhomeLoftFloored" data-value="Y">Yes</button>
+                                <button type="button" class="btn-choice" data-field="inhomeLoftFloored" data-value="N">No</button>
+                            </div>
+                            <input type="hidden" id="inhomeLoftFloored" name="inhomeLoftFloored" value="">
+                            <label class="photo-check" title="Photo taken">
+                                <input type="checkbox" name="inhomeLoftFlooredPhotoTaken" class="photo-taken-checkbox">
+                                <span class="photo-check-icon"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Loft Light:</label>
+                        <div class="inhome-row">
+                            <div class="button-group">
+                                <button type="button" class="btn-choice" data-field="inhomeLoftLight" data-value="Y">Yes</button>
+                                <button type="button" class="btn-choice" data-field="inhomeLoftLight" data-value="N">No</button>
+                            </div>
+                            <input type="hidden" id="inhomeLoftLight" name="inhomeLoftLight" value="">
+                            <label class="photo-check" title="Photo taken">
+                                <input type="checkbox" name="inhomeLoftLightPhotoTaken" class="photo-taken-checkbox">
+                                <span class="photo-check-icon"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Loft Ladder:</label>
+                        <div class="inhome-row">
+                            <div class="button-group">
+                                <button type="button" class="btn-choice" data-field="inhomeLoftLadder" data-value="Y">Yes</button>
+                                <button type="button" class="btn-choice" data-field="inhomeLoftLadder" data-value="N">No</button>
+                            </div>
+                            <input type="hidden" id="inhomeLoftLadder" name="inhomeLoftLadder" value="">
+                            <label class="photo-check" title="Photo taken">
+                                <input type="checkbox" name="inhomeLoftLadderPhotoTaken" class="photo-taken-checkbox">
+                                <span class="photo-check-icon"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Inverter in Loft:</label>
+                        <div class="inhome-row">
+                            <div class="button-group">
+                                <button type="button" class="btn-choice" data-field="inhomeInverterInLoft" data-value="Y">Yes</button>
+                                <button type="button" class="btn-choice" data-field="inhomeInverterInLoft" data-value="N">No</button>
+                            </div>
+                            <input type="hidden" id="inhomeInverterInLoft" name="inhomeInverterInLoft" value="">
+                            <label class="photo-check" title="Photo taken">
+                                <input type="checkbox" name="inhomeInverterPhotoTaken" class="photo-taken-checkbox">
+                                <span class="photo-check-icon"></span>
+                            </label>
+                        </div>
+                        <div class="conditional-field" id="inhomeInverterLocationGroup" style="display: none;">
+                            <label for="inhomeInverterLocation">Location in loft:</label>
+                            <div class="quick-options" data-target="inhomeInverterLocation">
+                                <button type="button" class="quick-btn">Near hatch</button>
+                                <button type="button" class="quick-btn">Centre</button>
+                                <button type="button" class="quick-btn">Gable end</button>
+                            </div>
+                            <input type="text" id="inhomeInverterLocation" name="inhomeInverterLocation" placeholder="Or specify location">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="inhomeRoofAspectsInside">Roof Aspects (from inside):</label>
+                        <div class="inhome-row">
+                            <textarea id="inhomeRoofAspectsInside" name="inhomeRoofAspectsInside" rows="2" placeholder="Notes on roof from inside loft"></textarea>
+                            <label class="photo-check" title="Photo taken">
+                                <input type="checkbox" name="inhomeRoofInsidePhotoTaken" class="photo-taken-checkbox">
+                                <span class="photo-check-icon"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Working Down -->
+                <div class="inhome-group">
+                    <h3>Working Down</h3>
+
+                    <div class="form-group">
+                        <label>Floor Covering (upstairs):</label>
+                        <div class="quick-options" data-target="inhomeFloorCoveringUpstairs">
+                            <button type="button" class="quick-btn">Carpet</button>
+                            <button type="button" class="quick-btn">Laminate</button>
+                            <button type="button" class="quick-btn">Tile</button>
+                            <button type="button" class="quick-btn">Wood</button>
+                        </div>
+                        <div class="inhome-row">
+                            <input type="text" id="inhomeFloorCoveringUpstairs" name="inhomeFloorCoveringUpstairs" placeholder="Or type other">
+                            <label class="photo-check" title="Photo taken">
+                                <input type="checkbox" name="inhomeFloorUpstairsPhotoTaken" class="photo-taken-checkbox">
+                                <span class="photo-check-icon"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Consumer Units (upstairs):</label>
+                        <div class="quick-options" data-target="inhomeConsumerUnitsUpstairs">
+                            <button type="button" class="quick-btn">None</button>
+                            <button type="button" class="quick-btn">Landing</button>
+                            <button type="button" class="quick-btn">Bedroom</button>
+                            <button type="button" class="quick-btn">Airing cupboard</button>
+                        </div>
+                        <div class="inhome-row">
+                            <input type="text" id="inhomeConsumerUnitsUpstairs" name="inhomeConsumerUnitsUpstairs" placeholder="Or type location">
+                            <label class="photo-check" title="Photo taken">
+                                <input type="checkbox" name="inhomeCUUpstairsPhotoTaken" class="photo-taken-checkbox">
+                                <span class="photo-check-icon"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Meter Location:</label>
+                        <div class="quick-options" data-target="inhomeMeterLocation">
+                            <button type="button" class="quick-btn">Cupboard</button>
+                            <button type="button" class="quick-btn">Garage</button>
+                            <button type="button" class="quick-btn">External</button>
+                            <button type="button" class="quick-btn">Hall</button>
+                            <button type="button" class="quick-btn">Kitchen</button>
+                        </div>
+                        <div class="inhome-row">
+                            <input type="text" id="inhomeMeterLocation" name="inhomeMeterLocation" placeholder="Or type location">
+                            <label class="photo-check" title="Photo taken">
+                                <input type="checkbox" name="inhomeMeterPhotoTaken" class="photo-taken-checkbox">
+                                <span class="photo-check-icon"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Fuse Location:</label>
+                        <div class="quick-options" data-target="inhomeFuseLocation">
+                            <button type="button" class="quick-btn">With meter</button>
+                            <button type="button" class="quick-btn">Cupboard</button>
+                            <button type="button" class="quick-btn">Garage</button>
+                            <button type="button" class="quick-btn">External</button>
+                            <button type="button" class="quick-btn">Kitchen</button>
+                        </div>
+                        <div class="inhome-row">
+                            <input type="text" id="inhomeFuseLocation" name="inhomeFuseLocation" placeholder="Or type location">
+                            <label class="photo-check" title="Photo taken">
+                                <input type="checkbox" name="inhomeFusePhotoTaken" class="photo-taken-checkbox">
+                                <span class="photo-check-icon"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Earthing System:</label>
+                        <div class="quick-options" data-target="inhomeEarthingSystem">
+                            <button type="button" class="quick-btn">TN-S</button>
+                            <button type="button" class="quick-btn">TN-C-S</button>
+                            <button type="button" class="quick-btn">TT</button>
+                        </div>
+                        <div class="inhome-row">
+                            <input type="text" id="inhomeEarthingSystem" name="inhomeEarthingSystem" placeholder="Or specify">
+                            <label class="photo-check" title="Photo taken">
+                                <input type="checkbox" name="inhomeEarthingPhotoTaken" class="photo-taken-checkbox">
+                                <span class="photo-check-icon"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Consumer Units (downstairs):</label>
+                        <div class="quick-options" data-target="inhomeConsumerUnitsDownstairs">
+                            <button type="button" class="quick-btn">Hall</button>
+                            <button type="button" class="quick-btn">Kitchen</button>
+                            <button type="button" class="quick-btn">Cupboard</button>
+                            <button type="button" class="quick-btn">Garage</button>
+                            <button type="button" class="quick-btn">Utility</button>
+                        </div>
+                        <div class="inhome-row">
+                            <input type="text" id="inhomeConsumerUnitsDownstairs" name="inhomeConsumerUnitsDownstairs" placeholder="Or type location">
+                            <label class="photo-check" title="Photo taken">
+                                <input type="checkbox" name="inhomeCUDownstairsPhotoTaken" class="photo-taken-checkbox">
+                                <span class="photo-check-icon"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Cable Route:</label>
+                        <div class="quick-options" data-target="inhomeCableRoute">
+                            <button type="button" class="quick-btn">Internal</button>
+                            <button type="button" class="quick-btn">External</button>
+                            <button type="button" class="quick-btn">Loft</button>
+                            <button type="button" class="quick-btn">Under floor</button>
+                        </div>
+                        <div class="inhome-row">
+                            <input type="text" id="inhomeCableRoute" name="inhomeCableRoute" placeholder="Or type details">
+                            <label class="photo-check" title="Photo taken">
+                                <input type="checkbox" name="inhomeCableRoutePhotoTaken" class="photo-taken-checkbox">
+                                <span class="photo-check-icon"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Outside -->
+                <div class="inhome-group">
+                    <h3>Outside (last)</h3>
+
+                    <div class="form-group">
+                        <label for="inhomeRoofAspectsOutside">Roof Aspects (exterior):</label>
+                        <div class="inhome-row">
+                            <textarea id="inhomeRoofAspectsOutside" name="inhomeRoofAspectsOutside" rows="2" placeholder="Notes on roof from outside"></textarea>
+                            <label class="photo-check" title="Photo taken">
+                                <input type="checkbox" name="inhomeRoofOutsidePhotoTaken" class="photo-taken-checkbox">
+                                <span class="photo-check-icon"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>External Photos:</label>
+                        <div class="inhome-row">
+                            <span class="photo-hint">Front, sides, roof views</span>
+                            <label class="photo-check" title="Photo taken">
+                                <input type="checkbox" name="inhomeExternalPhotosTaken" class="photo-taken-checkbox">
+                                <span class="photo-check-icon"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 1: Surveyor Information -->
+            <section id="surveyor" class="form-section">
+                <h2>Surveyor Information</h2>
+
+                <div class="form-group">
+                    <label for="carriedOutBy">Carried out by:</label>
+                    <select id="carriedOutBy" name="carriedOutBy">
+                        <option value="">Select surveyor...</option>
+                    </select>
+                </div>
+
+                <input type="hidden" id="projectRef" name="projectRef" value="">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="customerName">Name:</label>
+                        <input type="text" id="customerName" name="customerName" placeholder="Customer name">
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Address:</label>
+                        <input type="text" id="address" name="address" placeholder="Full address">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="mobile">Mobile:</label>
+                        <input type="tel" id="mobile" name="mobile" placeholder="Mobile number" inputmode="tel">
+                    </div>
+                    <div class="form-group">
+                        <label for="postCode">Post Code:</label>
+                        <input type="text" id="postCode" name="postCode" placeholder="Post code">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="home">Home:</label>
+                        <input type="tel" id="home" name="home" placeholder="Home phone" inputmode="tel">
+                    </div>
+                    <div class="form-group">
+                        <label for="what3words">What 3 Words:</label>
+                        <input type="text" id="what3words" name="what3words" placeholder="///">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" placeholder="email@example.com" inputmode="email">
+                </div>
+            </section>
+
+            <!-- Section 2: Property Details -->
+            <section id="property" class="form-section">
+                <h2>Property Details</h2>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="conservationArea">Conservation Area:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="conservationArea" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="conservationArea" data-value="N">No</button>
+                            <button type="button" class="btn-choice btn-notes" data-field="conservationArea" data-value="Notes">Notes</button>
+                        </div>
+                        <input type="hidden" id="conservationArea" name="conservationArea" value="">
+                        <div class="notes-field" id="conservationAreaNotes" style="display: none;">
+                            <textarea name="conservationAreaNotes" placeholder="Add notes..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Terrain:</label>
+                        <div class="quick-options" data-target="terrain">
+                            <button type="button" class="quick-btn">Town</button>
+                            <button type="button" class="quick-btn">Country</button>
+                            <button type="button" class="quick-btn">Coastal</button>
+                        </div>
+                        <input type="text" id="terrain" name="terrain" placeholder="Or specify">
+                    </div>
+                </div>
+
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="propertyExposed">Property exposed:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="propertyExposed" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="propertyExposed" data-value="N">No</button>
+                            <button type="button" class="btn-choice btn-notes" data-field="propertyExposed" data-value="Notes">Notes</button>
+                        </div>
+                        <input type="hidden" id="propertyExposed" name="propertyExposed" value="">
+                        <div class="notes-field" id="propertyExposedNotes" style="display: none;">
+                            <textarea name="propertyExposedNotes" placeholder="Add notes..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="parkingAvailable">Parking Available:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="parkingAvailable" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="parkingAvailable" data-value="N">No</button>
+                            <button type="button" class="btn-choice btn-notes" data-field="parkingAvailable" data-value="Notes">Notes</button>
+                        </div>
+                        <input type="hidden" id="parkingAvailable" name="parkingAvailable" value="">
+                        <div class="notes-field" id="parkingAvailableNotes" style="display: none;">
+                            <textarea name="parkingAvailableNotes" placeholder="Add notes..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="parkingSpecGroup" style="display: none;">
+                    <label for="parkingSpec">If no, please specify:</label>
+                    <input type="text" id="parkingSpec" name="parkingSpec" placeholder="Parking details">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Occupancy pattern:</label>
+                        <div class="quick-options" data-target="occupancyType">
+                            <button type="button" class="quick-btn">Home all day</button>
+                            <button type="button" class="quick-btn">Out 9-5</button>
+                            <button type="button" class="quick-btn">Shift worker</button>
+                            <button type="button" class="quick-btn">Variable</button>
+                        </div>
+                        <input type="text" id="occupancyType" name="occupancyType" placeholder="Or specify">
+                    </div>
+                    <div class="form-group">
+                        <label for="kwhPerAnnum">kWh per annum:</label>
+                        <input type="number" id="kwhPerAnnum" name="kwhPerAnnum" placeholder="kWh" inputmode="numeric">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>DNO:</label>
+                    <div class="quick-options" data-target="dno">
+                        <button type="button" class="quick-btn">SSE</button>
+                        <button type="button" class="quick-btn">SP Network</button>
+                    </div>
+                    <input type="text" id="dno" name="dno" placeholder="Or specify other">
+                </div>
+            </section>
+
+            <!-- Section 3: Building Details -->
+            <section id="building" class="form-section">
+                <h2>Building Details</h2>
+
+                <div class="form-group">
+                    <label>Construction:</label>
+                    <div class="quick-options" data-target="construction">
+                        <button type="button" class="quick-btn">Trad stone</button>
+                        <button type="button" class="quick-btn">Brick</button>
+                        <button type="button" class="quick-btn">Block</button>
+                        <button type="button" class="quick-btn">Timber frame</button>
+                    </div>
+                    <input type="text" id="construction" name="construction" placeholder="Or specify other">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Thickness of wall:</label>
+                        <div class="quick-options" data-target="wallThickness">
+                            <button type="button" class="quick-btn">230mm</button>
+                            <button type="button" class="quick-btn">300mm</button>
+                            <button type="button" class="quick-btn">450mm</button>
+                        </div>
+                        <input type="text" id="wallThickness" name="wallThickness" placeholder="Or specify (mm)">
+                    </div>
+                    <div class="form-group">
+                        <label for="internalWalk">Internal walk construction:</label>
+                        <input type="text" id="internalWalk" name="internalWalk" placeholder="Construction type">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Type of Building:</label>
+                    <div class="quick-options" data-target="buildingType">
+                        <button type="button" class="quick-btn">Bungalow</button>
+                        <button type="button" class="quick-btn">2 storey</button>
+                        <button type="button" class="quick-btn">3 storey</button>
+                        <button type="button" class="quick-btn">Townhouse</button>
+                    </div>
+                    <input type="text" id="buildingType" name="buildingType" placeholder="Or specify other">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="protectedSpecies">Protected species:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="protectedSpecies" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="protectedSpecies" data-value="N">No</button>
+                            <button type="button" class="btn-choice btn-notes" data-field="protectedSpecies" data-value="Notes">Notes</button>
+                        </div>
+                        <input type="hidden" id="protectedSpecies" name="protectedSpecies" value="">
+                        <div class="notes-field" id="protectedSpeciesNotes" style="display: none;">
+                            <textarea name="protectedSpeciesNotes" placeholder="Add notes..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="nests">Nests:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="nests" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="nests" data-value="N">No</button>
+                            <button type="button" class="btn-choice btn-notes" data-field="nests" data-value="Notes">Notes</button>
+                        </div>
+                        <input type="hidden" id="nests" name="nests" value="">
+                        <div class="notes-field" id="nestsNotes" style="display: none;">
+                            <textarea name="nestsNotes" placeholder="Add notes..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="nestSpecGroup" style="display: none;">
+                    <label for="nestSpec">Type of nest/species:</label>
+                    <input type="text" id="nestSpec" name="nestSpec" placeholder="Nest details">
+                </div>
+            </section>
+
+            <!-- Section 4: Roof Aspects -->
+            <section id="roof" class="form-section">
+                <h2>Roof Aspects</h2>
+                <div id="roofAspectsContainer">
+                    <!-- Roof aspects will be dynamically added here -->
+                </div>
+                <button type="button" class="btn-secondary" id="addRoofAspect">+ Add Roof Aspect</button>
+                <div class="form-note">
+                    <strong>Note:</strong> For metal box profile or corrugated roofs please note the distance between ridges, height of ridges and width of ridge.
+                </div>
+            </section>
+
+            <!-- Section 5: Electrical -->
+            <section id="electrical" class="form-section">
+                <h2>Electrical</h2>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fuseboardLocation">Fuseboard Location:</label>
+                        <input type="text" id="fuseboardLocation" name="fuseboardLocation" placeholder="Location">
+                    </div>
+                    <div class="form-group">
+                        <label for="meterLocation">Meter Location:</label>
+                        <input type="text" id="meterLocation" name="meterLocation" placeholder="Location">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="electricalCondition">Condition of Electrical installation:</label>
+                        <input type="text" id="electricalCondition" name="electricalCondition" placeholder="Condition">
+                    </div>
+                    <div class="form-group">
+                        <label for="phases">Number of Phases:</label>
+                        <input type="number" id="phases" name="phases" placeholder="Phases" inputmode="numeric">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="mainFuseSize">Main Fuse Size:</label>
+                        <input type="text" id="mainFuseSize" name="mainFuseSize" placeholder="Fuse size">
+                    </div>
+                    <div class="form-group">
+                        <label>Earthing System:</label>
+                        <div class="quick-options" data-target="earthingSystem">
+                            <button type="button" class="quick-btn">TN-S</button>
+                            <button type="button" class="quick-btn">TN-C-S</button>
+                            <button type="button" class="quick-btn">TT</button>
+                        </div>
+                        <div class="inhome-row">
+                            <input type="text" id="earthingSystem" name="earthingSystem" placeholder="Or specify">
+                            <label class="photo-check" title="Photo taken">
+                                <input type="checkbox" name="earthingSystemPhotoTaken" class="photo-taken-checkbox">
+                                <span class="photo-check-icon"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="maximumDemand">Maximum Demand:</label>
+                    <input type="text" id="maximumDemand" name="maximumDemand" placeholder="Maximum demand">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="loopedSupply">Looped Supply:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="loopedSupply" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="loopedSupply" data-value="N">No</button>
+                            <button type="button" class="btn-choice btn-notes" data-field="loopedSupply" data-value="Notes">Notes</button>
+                        </div>
+                        <input type="hidden" id="loopedSupply" name="loopedSupply" value="">
+                        <div class="notes-field" id="loopedSupplyNotes" style="display: none;">
+                            <textarea name="loopedSupplyNotes" placeholder="Add notes..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="loopImpedance">L-N Loop impedance:</label>
+                        <input type="text" id="loopImpedance" name="loopImpedance" placeholder="Impedance">
+                    </div>
+                </div>
+
+                <div class="form-note important">
+                    <strong>⚠️ MUST BE PHOTOGRAPHED</strong>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="spaceForCU">Space for new CU:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="spaceForCU" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="spaceForCU" data-value="N">No</button>
+                            <button type="button" class="btn-choice btn-notes" data-field="spaceForCU" data-value="Notes">Notes</button>
+                        </div>
+                        <input type="hidden" id="spaceForCU" name="spaceForCU" value="">
+                        <div class="notes-field" id="spaceForCUNotes" style="display: none;">
+                            <textarea name="spaceForCUNotes" placeholder="Add notes..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="underfloorAccess">Underfloor Access:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="underfloorAccess" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="underfloorAccess" data-value="N">No</button>
+                            <button type="button" class="btn-choice btn-notes" data-field="underfloorAccess" data-value="Notes">Notes</button>
+                        </div>
+                        <input type="hidden" id="underfloorAccess" name="underfloorAccess" value="">
+                        <div class="notes-field" id="underfloorAccessNotes" style="display: none;">
+                            <textarea name="underfloorAccessNotes" placeholder="Add notes..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cableRoute">Cable route:</label>
+                        <select id="cableRoute" name="cableRoute">
+                            <option value="">Select...</option>
+                            <option value="Y">Yes</option>
+                            <option value="N">No</option>
+                            <option value="See Plan">See Plan</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Floor Coverings:</label>
+                        <div class="quick-options" data-target="floorCoverings">
+                            <button type="button" class="quick-btn">Carpet</button>
+                            <button type="button" class="quick-btn">Laminate</button>
+                            <button type="button" class="quick-btn">Tile</button>
+                            <button type="button" class="quick-btn">Wood</button>
+                        </div>
+                        <input type="text" id="floorCoverings" name="floorCoverings" placeholder="Or specify other">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 6: Inverter & System -->
+            <section id="inverter" class="form-section">
+                <h2>Inverter & System Details</h2>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Inverter in Loft:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="inverterInLoft" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="inverterInLoft" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="inverterInLoft" name="inverterInLoft" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Interior/Exterior:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="inverterInteriorExterior" data-value="Interior">Interior</button>
+                            <button type="button" class="btn-choice" data-field="inverterInteriorExterior" data-value="Exterior">Exterior</button>
+                        </div>
+                        <input type="hidden" id="inverterInteriorExterior" name="inverterInteriorExterior" value="">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="inverterLocation">Inverter Location:</label>
+                    <input type="text" id="inverterLocation" name="inverterLocation" placeholder="Location details">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="wifiAvailable">WiFi Available:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="wifiAvailable" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="wifiAvailable" data-value="N">No</button>
+                            <button type="button" class="btn-choice btn-notes" data-field="wifiAvailable" data-value="Notes">Notes</button>
+                        </div>
+                        <input type="hidden" id="wifiAvailable" name="wifiAvailable" value="">
+                        <div class="notes-field" id="wifiAvailableNotes" style="display: none;">
+                            <textarea name="wifiAvailableNotes" placeholder="Add notes..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Mounting Surface:</label>
+                        <div class="quick-options" data-target="mountingSurface">
+                            <button type="button" class="quick-btn">Brick</button>
+                            <button type="button" class="quick-btn">Plasterboard</button>
+                            <button type="button" class="quick-btn">Timber</button>
+                            <button type="button" class="quick-btn">Block</button>
+                        </div>
+                        <input type="text" id="mountingSurface" name="mountingSurface" placeholder="Or specify">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="loftFloored">Loft Floored:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="loftFloored" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="loftFloored" data-value="N">No</button>
+                            <button type="button" class="btn-choice btn-notes" data-field="loftFloored" data-value="Notes">Notes</button>
+                        </div>
+                        <input type="hidden" id="loftFloored" name="loftFloored" value="">
+                        <div class="notes-field" id="loftFlooredNotes" style="display: none;">
+                            <textarea name="loftFlooredNotes" placeholder="Add notes..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="loftLight">Loft Light:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="loftLight" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="loftLight" data-value="N">No</button>
+                            <button type="button" class="btn-choice btn-notes" data-field="loftLight" data-value="Notes">Notes</button>
+                        </div>
+                        <input type="hidden" id="loftLight" name="loftLight" value="">
+                        <div class="notes-field" id="loftLightNotes" style="display: none;">
+                            <textarea name="loftLightNotes" placeholder="Add notes..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="loftLadder">Loft Ladder:</label>
+                    <div class="button-group">
+                        <button type="button" class="btn-choice" data-field="loftLadder" data-value="Y">Yes</button>
+                        <button type="button" class="btn-choice" data-field="loftLadder" data-value="N">No</button>
+                        <button type="button" class="btn-choice btn-notes" data-field="loftLadder" data-value="Notes">Notes</button>
+                    </div>
+                    <input type="hidden" id="loftLadder" name="loftLadder" value="">
+                    <div class="notes-field" id="loftLadderNotes" style="display: none;">
+                        <textarea name="loftLadderNotes" placeholder="Add notes..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Water Heating method:</label>
+                    <div class="quick-options" data-target="waterHeating">
+                        <button type="button" class="quick-btn">Immersion</button>
+                        <button type="button" class="quick-btn">Gas</button>
+                        <button type="button" class="quick-btn">Oil</button>
+                        <button type="button" class="quick-btn">Heat pump</button>
+                    </div>
+                    <input type="text" id="waterHeating" name="waterHeating" placeholder="Or specify other">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="smokeAlarms">Interlinked Smoke Alarms:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="smokeAlarms" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="smokeAlarms" data-value="N">No</button>
+                            <button type="button" class="btn-choice btn-notes" data-field="smokeAlarms" data-value="Notes">Notes</button>
+                        </div>
+                        <input type="hidden" id="smokeAlarms" name="smokeAlarms" value="">
+                        <div class="notes-field" id="smokeAlarmsNotes" style="display: none;">
+                            <textarea name="smokeAlarmsNotes" placeholder="Add notes..."></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="smokeAlarmBrand">Brand:</label>
+                        <input type="text" id="smokeAlarmBrand" name="smokeAlarmBrand" placeholder="Brand name">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="smokeAlarmType">Type:</label>
+                        <input type="text" id="smokeAlarmType" name="smokeAlarmType" placeholder="Type">
+                    </div>
+                    <div class="form-group">
+                        <label>Hardwired / Wireless:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="smokeAlarmHardwired" data-value="Hardwired">Hardwired</button>
+                            <button type="button" class="btn-choice" data-field="smokeAlarmHardwired" data-value="Wireless">Wireless</button>
+                        </div>
+                        <input type="hidden" id="smokeAlarmHardwired" name="smokeAlarmHardwired" value="">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 7: Notes & Photos -->
+            <section id="notes" class="form-section">
+                <h2>Notes & Photos</h2>
+
+                <div class="form-group">
+                    <label for="surveyNotes">Notes:</label>
+                    <textarea id="surveyNotes" name="surveyNotes" rows="6" placeholder="Additional notes..."></textarea>
+                </div>
+
+                <div class="photo-upload-section">
+                    <h3>Upload All Photos</h3>
+                    <p class="section-hint">Upload all photos taken during the survey</p>
+
+                    <div class="form-group">
+                        <label>Loft Photos:</label>
+                        <input type="file" id="loftPhotos" name="loftPhotos" accept="image/*" multiple>
+                        <div class="file-preview" id="loftPhotosPreview"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Meter / Fuse / Earthing Photos:</label>
+                        <input type="file" id="electricalPhotos" name="electricalPhotos" accept="image/*" multiple>
+                        <div class="file-preview" id="electricalPhotosPreview"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Consumer Unit Photos:</label>
+                        <input type="file" id="consumerUnitPhotos" name="consumerUnitPhotos" accept="image/*" multiple>
+                        <div class="file-preview" id="consumerUnitPhotosPreview"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Roof Photos (inside & outside):</label>
+                        <input type="file" id="roofPhotos" name="roofPhotos" accept="image/*" multiple>
+                        <div class="file-preview" id="roofPhotosPreview"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>External / Property Photos:</label>
+                        <input type="file" id="externalPhotos" name="externalPhotos" accept="image/*" multiple>
+                        <div class="file-preview" id="externalPhotosPreview"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Floorplan:</label>
+                        <input type="file" id="floorplan" name="floorplan" accept="image/*,application/pdf">
+                        <div class="file-preview" id="floorplanPreview"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Roof plan:</label>
+                        <input type="file" id="roofPlan" name="roofPlan" accept="image/*,application/pdf">
+                        <div class="file-preview" id="roofPlanPreview"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Other Photos:</label>
+                        <input type="file" id="otherPhotos" name="otherPhotos" accept="image/*" multiple>
+                        <div class="file-preview" id="otherPhotosPreview"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Action Buttons -->
+            <div class="form-actions">
+                <button type="button" class="btn-dropbox" id="dropboxBtn">
+                    <svg class="dropbox-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2L6 6.5L12 11L6 15.5L12 20L18 15.5L12 11L18 6.5L12 2ZM6 6.5L0 11L6 15.5L12 11L6 6.5ZM18 6.5L12 11L18 15.5L24 11L18 6.5ZM6 15.5L0 20L6 24.5L12 20L6 15.5ZM18 15.5L12 20L18 24.5L24 20L18 15.5Z"/>
+                    </svg>
+                    Submit to Dropbox
+                </button>
+                <button type="button" class="btn-primary" id="exportBtn">Export to Excel</button>
+                <button type="button" class="btn-secondary" id="exportPdfBtn">Export to PDF</button>
+                <button type="button" class="btn-secondary" id="exportCsvBtn">Export to CSV</button>
+                <button type="button" class="btn-secondary" id="clearBtn">Clear Form</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script type="module" src="js/app.js"></script>
+    <script>
+        // Register Service Worker for offline support
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
+
