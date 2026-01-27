@@ -1564,17 +1564,13 @@ a:focus-visible {
     margin-bottom: 0;
 }
 
-.header-logo {
-    height: 50px;
+.header-logo-main {
+    height: 55px;
     width: auto;
     border-radius: 6px;
     background: white;
     padding: 6px 8px;
     object-fit: contain;
-}
-
-.header-logo-main {
-    height: 55px;
 }
 
 .header-trust-badges {
@@ -1585,9 +1581,12 @@ a:focus-visible {
 }
 
 .header-logo-badge {
-    height: 45px;
+    height: 50px;
     width: auto;
-    max-width: none;
+    border-radius: 6px;
+    background: white;
+    padding: 5px 8px;
+    object-fit: contain;
 }
 
 /* Header User Info */
