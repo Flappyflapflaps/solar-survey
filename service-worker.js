@@ -1,6 +1,6 @@
 // Service Worker for Solar Site Survey - Offline Support
 
-const CACHE_NAME = 'solar-survey-v9';
+const CACHE_NAME = 'solar-survey-v10';
 const urlsToCache = [
     './',
     './index.html',
@@ -78,6 +78,20 @@ self.addEventListener('fetch', function(event) {
         return;
     }
 
+    // For navigation requests (HTML pages), use network-first to avoid redirect issues in Safari
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request)
+                .catch(function() {
+                    return caches.match(event.request)
+                        .then(function(response) {
+                            return response || caches.match('./index.html');
+                        });
+                })
+        );
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request)
             .then(function(response) {
@@ -85,24 +99,24 @@ self.addEventListener('fetch', function(event) {
                 if (response) {
                     return response;
                 }
-                
+
                 // Clone the request
                 const fetchRequest = event.request.clone();
-                
+
                 return fetch(fetchRequest).then(function(response) {
-                    // Check if valid response
-                    if (!response || response.status !== 200 || response.type !== 'basic') {
+                    // Check if valid response - don't cache redirects or opaque responses
+                    if (!response || response.status !== 200 || response.type !== 'basic' || response.redirected) {
                         return response;
                     }
-                    
+
                     // Clone the response
                     const responseToCache = response.clone();
-                    
+
                     caches.open(CACHE_NAME)
                         .then(function(cache) {
                             cache.put(event.request, responseToCache);
                         });
-                    
+
                     return response;
                 }).catch(function() {
                     // If fetch fails, return offline page if available
