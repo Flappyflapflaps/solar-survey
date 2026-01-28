@@ -428,9 +428,12 @@ class SolarSurveyApp {
             }
 
             // Clear file previews
-            $('#floorplanPreview').innerHTML = '';
-            $('#roofPlanPreview').innerHTML = '';
-            $('#additionalPhotosPreview').innerHTML = '';
+            const floorplanPreview = $('#floorplanPreview');
+            const roofPlanPreview = $('#roofPlanPreview');
+            const additionalPhotosPreview = $('#additionalPhotosPreview');
+            if (floorplanPreview) floorplanPreview.innerHTML = '';
+            if (roofPlanPreview) roofPlanPreview.innerHTML = '';
+            if (additionalPhotosPreview) additionalPhotosPreview.innerHTML = '';
 
             this.updateProgress();
             this.showSaveIndicator();
@@ -965,9 +968,12 @@ class SolarSurveyApp {
                 });
             }
 
-            $('#floorplanPreview').innerHTML = '';
-            $('#roofPlanPreview').innerHTML = '';
-            $('#additionalPhotosPreview').innerHTML = '';
+            const floorplanPreview = $('#floorplanPreview');
+            const roofPlanPreview = $('#roofPlanPreview');
+            const additionalPhotosPreview = $('#additionalPhotosPreview');
+            if (floorplanPreview) floorplanPreview.innerHTML = '';
+            if (roofPlanPreview) roofPlanPreview.innerHTML = '';
+            if (additionalPhotosPreview) additionalPhotosPreview.innerHTML = '';
 
             this.updateProgress();
             this.showSaveIndicator();
