@@ -561,6 +561,31 @@ body {
     border-color: var(--success-color);
 }
 
+/* Mobile: Minimal header - just logos */
+@media (max-width: 767px) {
+    .progress-bar,
+    .progress-text,
+    .header-user,
+    .header-brand h1 {
+        display: none;
+    }
+
+    .header {
+        padding: 0.5rem 1rem;
+        position: static;
+    }
+
+    .header-brand {
+        justify-content: center;
+        margin-bottom: 0;
+    }
+
+    .nav-menu {
+        position: sticky;
+        top: 0;
+    }
+}
+
 /* Tablet Styles */
 @media (min-width: 768px) {
     .container {
