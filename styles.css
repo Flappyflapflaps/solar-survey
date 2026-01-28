@@ -429,15 +429,15 @@ body {
 .btn-primary,
 .btn-secondary {
     width: 100%;
-    padding: 1rem;
-    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.9375rem;
     font-weight: 600;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
-    min-height: 48px;
-    margin-bottom: 0.75rem;
+    min-height: 44px;
+    margin-bottom: 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -462,18 +462,90 @@ body {
     transform: scale(0.98);
 }
 
-.btn-secondary:last-child {
-    margin-bottom: 0;
-}
 
 /* Form Actions */
 .form-actions {
-    padding: 1.5rem 1rem;
+    padding: 0.75rem 1rem;
     background: white;
     position: sticky;
     bottom: 0;
     border-top: 2px solid var(--border-color);
     box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile Action Menu */
+.action-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.875rem 1rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 48px;
+}
+
+.action-menu-toggle:active {
+    background: #2980b9;
+}
+
+.action-menu-toggle .burger-icon {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.action-menu-toggle .burger-icon span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: white;
+    border-radius: 1px;
+    transition: all 0.2s;
+}
+
+.action-menu-toggle.active .burger-icon span:nth-child(1) {
+    transform: rotate(45deg) translate(4px, 4px);
+}
+
+.action-menu-toggle.active .burger-icon span:nth-child(2) {
+    opacity: 0;
+}
+
+.action-menu-toggle.active .burger-icon span:nth-child(3) {
+    transform: rotate(-45deg) translate(4px, -4px);
+}
+
+.action-buttons-wrapper {
+    display: none;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    animation: slideDown 0.2s ease;
+}
+
+.action-buttons-wrapper.active {
+    display: flex;
+}
+
+/* Hide toggle on tablet+ */
+@media (min-width: 768px) {
+    .action-menu-toggle {
+        display: none;
+    }
+
+    .action-buttons-wrapper {
+        display: flex !important;
+        flex-direction: row;
+        margin-top: 0;
+        gap: 0.75rem;
+    }
 }
 
 /* Validation */
@@ -541,13 +613,12 @@ body {
     }
 
     .form-actions {
-        padding: 1.5rem;
-        display: flex;
-        gap: 1rem;
+        padding: 1rem 1.5rem;
     }
 
-    .form-actions .btn-primary,
-    .form-actions .btn-secondary {
+    .action-buttons-wrapper .btn-primary,
+    .action-buttons-wrapper .btn-secondary,
+    .action-buttons-wrapper .btn-dropbox {
         width: auto;
         flex: 1;
         margin-bottom: 0;
@@ -576,15 +647,15 @@ body {
 /* Dropbox Button */
 .btn-dropbox {
     width: 100%;
-    padding: 1rem;
-    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.9375rem;
     font-weight: 600;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
-    min-height: 48px;
-    margin-bottom: 0.75rem;
+    min-height: 44px;
+    margin-bottom: 0;
     text-transform: uppercase;
     letter-spacing: 0.5px;
     background: linear-gradient(135deg, #0061FF 0%, #0052D4 100%);

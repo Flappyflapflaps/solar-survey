@@ -902,16 +902,26 @@
 
             <!-- Action Buttons -->
             <div class="form-actions">
-                <button type="button" class="btn-dropbox" id="dropboxBtn">
-                    <svg class="dropbox-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M12 2L6 6.5L12 11L6 15.5L12 20L18 15.5L12 11L18 6.5L12 2ZM6 6.5L0 11L6 15.5L12 11L6 6.5ZM18 6.5L12 11L18 15.5L24 11L18 6.5ZM6 15.5L0 20L6 24.5L12 20L6 15.5ZM18 15.5L12 20L18 24.5L24 20L18 15.5Z"/>
-                    </svg>
-                    Submit to Dropbox
+                <button type="button" class="action-menu-toggle" id="actionMenuToggle">
+                    <span class="burger-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                    Actions
                 </button>
-                <button type="button" class="btn-primary" id="exportBtn">Export to Excel</button>
-                <button type="button" class="btn-secondary" id="exportPdfBtn">Export to PDF</button>
-                <button type="button" class="btn-secondary" id="exportCsvBtn">Export to CSV</button>
-                <button type="button" class="btn-secondary" id="clearBtn">Clear Form</button>
+                <div class="action-buttons-wrapper" id="actionButtonsWrapper">
+                    <button type="button" class="btn-dropbox" id="dropboxBtn">
+                        <svg class="dropbox-icon" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L6 6.5L12 11L6 15.5L12 20L18 15.5L12 11L18 6.5L12 2ZM6 6.5L0 11L6 15.5L12 11L6 6.5ZM18 6.5L12 11L18 15.5L24 11L18 6.5ZM6 15.5L0 20L6 24.5L12 20L6 15.5ZM18 15.5L12 20L18 24.5L24 20L18 15.5Z"/>
+                        </svg>
+                        Submit to Dropbox
+                    </button>
+                    <button type="button" class="btn-primary" id="exportBtn">Export to Excel</button>
+                    <button type="button" class="btn-secondary" id="exportPdfBtn">Export to PDF</button>
+                    <button type="button" class="btn-secondary" id="exportCsvBtn">Export to CSV</button>
+                    <button type="button" class="btn-secondary" id="clearBtn">Clear Form</button>
+                </div>
             </div>
         </form>
     </div>

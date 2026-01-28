@@ -228,6 +228,16 @@ class SolarSurveyApp {
         const updateProgressDebounced = debounce(() => this.updateProgress(), 500);
         on(this.form, 'input', updateProgressDebounced);
         on(this.form, 'change', updateProgressDebounced);
+
+        // Mobile action menu toggle
+        const actionMenuToggle = $('#actionMenuToggle');
+        const actionButtonsWrapper = $('#actionButtonsWrapper');
+        if (actionMenuToggle && actionButtonsWrapper) {
+            on(actionMenuToggle, 'click', () => {
+                actionMenuToggle.classList.toggle('active');
+                actionButtonsWrapper.classList.toggle('active');
+            });
+        }
     }
 
     autoSave() {
