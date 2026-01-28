@@ -1565,7 +1565,7 @@ a:focus-visible {
 }
 
 .header-logo-main {
-    height: 55px;
+    height: 63px;
     width: auto;
     object-fit: contain;
 }
@@ -1616,7 +1616,7 @@ a:focus-visible {
 
 @media (min-width: 768px) {
     .header-logo-main {
-        height: 50px;
+        height: 58px;
     }
 
     .header-logo-badge {
