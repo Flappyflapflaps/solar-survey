@@ -19,6 +19,7 @@ import { initializeButtonGroups } from './components/ButtonGroup.js';
 import { initializeConditionalFields } from './components/ConditionalField.js';
 import { RoofAspectManager } from './components/RoofAspect.js';
 import { initializeFileUploads } from './components/FileUpload.js';
+import { DraftsPicker } from './components/DraftsPicker.js';
 import { $, on } from './utils/dom.js';
 import { debounce } from './utils/debounce.js';
 import { populateForm, clearForm as clearFormHelper } from './utils/formHelpers.js';
@@ -211,6 +212,16 @@ class SolarSurveyApp {
         const dropboxBtn = $('#dropboxBtn');
         if (dropboxBtn) {
             on(dropboxBtn, 'click', () => this.handleDropboxClick());
+        }
+
+        // Draft buttons
+        const saveDraftBtn = $('#saveDraftBtn');
+        const loadDraftBtn = $('#loadDraftBtn');
+        if (saveDraftBtn) {
+            on(saveDraftBtn, 'click', () => this.saveDraft());
+        }
+        if (loadDraftBtn) {
+            on(loadDraftBtn, 'click', () => this.showDraftsPicker());
         }
 
         // Job selection buttons
@@ -768,6 +779,168 @@ class SolarSurveyApp {
                 </div>
             `;
         }
+    }
+
+    // ==================== DRAFT METHODS ====================
+
+    // Save current form as a draft
+    saveDraft() {
+        try {
+            const roofAspectCount = formState.get('roofAspectCount');
+            const formData = formDataModel.collectFormData(this.form, roofAspectCount);
+
+            const result = storageService.saveDraft(formData, roofAspectCount);
+
+            if (result.success) {
+                this.showDraftSavedMessage(result.draft.name);
+            } else {
+                alert('Failed to save draft: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error saving draft:', error);
+            alert('Error saving draft. Please try again.');
+        }
+    }
+
+    // Show the drafts picker modal
+    showDraftsPicker() {
+        const picker = new DraftsPicker(
+            (data, roofAspectCount, draft) => {
+                this.loadDraftData(data, roofAspectCount, draft);
+            },
+            () => {
+                // Cancelled - do nothing
+            }
+        );
+        picker.show();
+    }
+
+    // Load draft data into the form
+    loadDraftData(data, roofAspectCount, draft) {
+        try {
+            // Clear existing form
+            clearFormHelper(this.form);
+
+            // Remove extra roof aspects
+            const currentCount = this.roofAspectManager.getCount();
+            for (let i = currentCount; i > 1; i--) {
+                const aspect = this.roofAspectManager.getAspect(i);
+                if (aspect) aspect.destroy();
+            }
+            this.roofAspectManager.aspects = this.roofAspectManager.aspects.slice(0, 1);
+
+            // Clear file uploads
+            this.fileUploads.forEach(upload => upload.clear());
+
+            // Reset first roof aspect
+            const firstAspect = this.roofAspectManager.getAspect(1);
+            if (firstAspect && firstAspect.element) {
+                const inputs = firstAspect.element.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    if (input.type !== 'hidden') input.value = '';
+                });
+            }
+
+            // Populate form fields
+            populateForm(this.form, data);
+
+            // Restore roof aspects
+            if (roofAspectCount > 1) {
+                for (let i = 2; i <= roofAspectCount; i++) {
+                    this.roofAspectManager.add();
+                }
+            }
+            formState.set('roofAspectCount', roofAspectCount || 1);
+
+            // Restore roof aspect data
+            for (let i = 1; i <= roofAspectCount; i++) {
+                const aspectData = formDataModel.getRoofAspectData(data, i);
+                const aspect = this.roofAspectManager.getAspect(i);
+                if (aspect) {
+                    aspect.setData(aspectData);
+                }
+            }
+
+            // Restore button group states
+            Object.keys(data).forEach(key => {
+                const field = this.form.querySelector(`[name="${key}"]`);
+                if (field && field.type === 'hidden' && field.value) {
+                    const button = this.form.querySelector(
+                        `[data-field="${key}"][data-value="${field.value}"]`
+                    );
+                    if (button) {
+                        button.classList.add('active');
+
+                        if (field.value === 'Notes') {
+                            const notesField = $(`#${key}Notes`);
+                            if (notesField) {
+                                notesField.style.display = 'block';
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Trigger conditional fields
+            this.form.querySelectorAll('select').forEach(select => {
+                if (select.value) {
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+
+            // Update state and save to active storage
+            formState.setFormData(data);
+            storageService.save(data, roofAspectCount || 1);
+
+            this.updateProgress();
+            this.showDraftLoadedMessage(draft.name);
+        } catch (error) {
+            console.error('Error loading draft:', error);
+            alert('Error loading draft. Please try again.');
+        }
+    }
+
+    // Show draft saved message
+    showDraftSavedMessage(name) {
+        const toast = document.createElement('div');
+        toast.className = 'draft-toast draft-toast-success';
+        toast.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+            </svg>
+            <span>Draft saved: <strong>${this.escapeHtml(name)}</strong></span>
+        `;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
+
+    // Show draft loaded message
+    showDraftLoadedMessage(name) {
+        const toast = document.createElement('div');
+        toast.className = 'draft-toast draft-toast-info';
+        toast.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+            </svg>
+            <span>Loaded: <strong>${this.escapeHtml(name)}</strong></span>
+        `;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => toast.remove(), 300);
+        }, 2500);
+    }
+
+    // Escape HTML helper
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     clearFormWithoutConfirm() {
