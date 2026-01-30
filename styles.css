@@ -2021,3 +2021,654 @@ a:focus-visible {
     }
 }
 
+/* ==================== FORM BUILDER ==================== */
+
+/* Form Builder Wrapper */
+.form-builder-wrapper {
+    padding: 1rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Form Builder Header */
+.form-builder-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.form-builder-title {
+    font-size: 1.5rem;
+    color: var(--secondary-color);
+    margin: 0;
+}
+
+/* Form Builder Sections */
+.form-builder-section {
+    margin-bottom: 1.5rem;
+}
+
+.form-builder-section-title {
+    font-size: 1.125rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* Form Builder Inputs */
+.form-builder-input {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    transition: all 0.2s;
+}
+
+.form-builder-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.form-builder-textarea {
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+}
+
+.form-builder-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%232c3e50' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 12px;
+    padding-right: 2.5rem;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Field Labels */
+.form-builder-label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.required-marker {
+    color: var(--error-color);
+}
+
+/* Fields List */
+.form-builder-fields-list {
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-color);
+    min-height: 100px;
+}
+
+.form-builder-empty {
+    padding: 2rem;
+    text-align: center;
+    color: #666;
+}
+
+/* Field Item */
+.form-builder-field-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-builder-field-item:last-child {
+    border-bottom: none;
+}
+
+.field-reorder-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.field-reorder-btn {
+    width: 24px;
+    height: 20px;
+    padding: 0;
+    border: 1px solid var(--border-color);
+    background: white;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.625rem;
+    color: #666;
+}
+
+.field-reorder-btn:hover:not(:disabled) {
+    background: var(--bg-color);
+    border-color: var(--primary-color);
+}
+
+.field-reorder-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.field-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.field-label {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.field-type {
+    font-size: 0.8125rem;
+    color: #666;
+}
+
+.field-required-badge {
+    font-size: 0.75rem;
+    background: var(--warning-color);
+    color: white;
+    padding: 0.125rem 0.5rem;
+    border-radius: 10px;
+}
+
+.field-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.field-action-btn {
+    padding: 0.375rem 0.75rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8125rem;
+    transition: all 0.15s;
+}
+
+.field-edit-btn {
+    background: var(--primary-color);
+    color: white;
+}
+
+.field-edit-btn:hover {
+    background: #2980b9;
+}
+
+.field-delete-btn {
+    background: transparent;
+    color: #999;
+    font-size: 1.25rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.field-delete-btn:hover {
+    color: var(--error-color);
+    background: #fee;
+}
+
+/* Add Field Section */
+.form-builder-add-section {
+    background: var(--bg-color);
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.form-builder-add-title {
+    font-size: 0.9375rem;
+    color: #666;
+    margin-bottom: 0.75rem;
+}
+
+.form-builder-add-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.form-builder-add-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    border: 2px solid var(--border-color);
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--text-color);
+    transition: all 0.15s;
+}
+
+.form-builder-add-btn:hover {
+    border-color: var(--primary-color);
+    background: rgba(52, 152, 219, 0.05);
+}
+
+.add-btn-icon {
+    font-size: 1rem;
+}
+
+/* Form Builder Actions */
+.form-builder-actions {
+    display: flex;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    flex-wrap: wrap;
+}
+
+.form-builder-btn {
+    flex: 1;
+    min-width: 100px;
+}
+
+/* Form Builder Modal */
+.form-builder-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 1rem;
+}
+
+.form-builder-modal {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 500px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+.form-builder-preview-modal {
+    max-width: 600px;
+}
+
+.form-builder-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-builder-modal-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    color: var(--secondary-color);
+}
+
+.form-builder-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: #666;
+    cursor: pointer;
+    padding: 0.25rem;
+    line-height: 1;
+}
+
+.form-builder-modal-close:hover {
+    color: var(--error-color);
+}
+
+.form-builder-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem;
+}
+
+.form-builder-modal-footer {
+    display: flex;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--border-color);
+    justify-content: flex-end;
+}
+
+/* Field Editor */
+.field-editor-modal .form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-builder-checkbox {
+    width: 18px;
+    height: 18px;
+}
+
+/* Options Editor */
+.options-editor {
+    margin-top: 1rem;
+}
+
+.options-list {
+    margin-bottom: 0.75rem;
+}
+
+.option-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.option-value,
+.option-label {
+    flex: 1;
+}
+
+.option-remove-btn {
+    width: 32px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    color: #999;
+    font-size: 1.25rem;
+}
+
+.option-remove-btn:hover {
+    background: #fee;
+    border-color: var(--error-color);
+    color: var(--error-color);
+}
+
+/* Template Picker */
+.template-picker-body {
+    min-height: 200px;
+    max-height: 400px;
+}
+
+.template-picker-empty {
+    padding: 2rem;
+    text-align: center;
+    color: #666;
+}
+
+.template-picker-hint {
+    font-size: 0.875rem;
+    color: #999;
+    margin-top: 0.5rem;
+}
+
+.template-picker-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.template-picker-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.875rem;
+    border-bottom: 1px solid var(--border-color);
+    gap: 1rem;
+}
+
+.template-picker-item:last-child {
+    border-bottom: none;
+}
+
+.template-picker-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.template-picker-item-name {
+    font-weight: 500;
+    color: var(--text-color);
+    margin-bottom: 0.25rem;
+}
+
+.template-picker-item-desc {
+    font-size: 0.8125rem;
+    color: #666;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.template-picker-item-meta {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    color: #999;
+}
+
+.template-picker-item-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Rendered Form Styles */
+.form-builder-rendered-form {
+    padding: 1rem;
+}
+
+.form-builder-form-title {
+    font-size: 1.25rem;
+    color: var(--secondary-color);
+    margin-bottom: 0.5rem;
+}
+
+.form-builder-form-description {
+    color: #666;
+    margin-bottom: 1.5rem;
+    font-size: 0.9375rem;
+}
+
+.form-builder-field {
+    margin-bottom: 1.25rem;
+}
+
+/* Field Validation */
+.field-invalid .form-builder-input {
+    border-color: var(--error-color);
+}
+
+.field-error {
+    color: var(--error-color);
+    font-size: 0.8125rem;
+    margin-top: 0.375rem;
+}
+
+.field-hint {
+    color: #666;
+    font-size: 0.8125rem;
+    margin-top: 0.25rem;
+}
+
+/* Photo Field */
+.photo-input-wrapper {
+    position: relative;
+}
+
+.form-builder-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.photo-upload-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-color);
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.photo-upload-btn:hover {
+    border-color: var(--primary-color);
+    background: rgba(52, 152, 219, 0.05);
+}
+
+.photo-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.photo-preview-item {
+    position: relative;
+    display: inline-block;
+}
+
+.photo-preview-item img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+
+.photo-remove-btn {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    background: var(--error-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Signature Field */
+.signature-wrapper {
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+}
+
+.signature-canvas {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    height: 150px;
+    touch-action: none;
+    cursor: crosshair;
+}
+
+.signature-buttons {
+    padding: 0.5rem;
+    background: var(--bg-color);
+    border-top: 1px solid var(--border-color);
+}
+
+.signature-clear-btn {
+    padding: 0.375rem 0.75rem;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8125rem;
+}
+
+.signature-clear-btn:hover {
+    background: var(--bg-color);
+    border-color: var(--primary-color);
+}
+
+/* Utility Classes */
+.btn-small {
+    padding: 0.375rem 0.75rem !important;
+    font-size: 0.8125rem !important;
+    min-height: 32px !important;
+}
+
+.btn-danger {
+    background: var(--error-color);
+    color: white;
+    border: none;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+    .form-builder-field-item {
+        flex-wrap: wrap;
+    }
+
+    .field-info {
+        flex: 1 1 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .field-actions {
+        margin-left: auto;
+    }
+
+    .form-builder-add-buttons {
+        flex-direction: column;
+    }
+
+    .form-builder-add-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .form-builder-actions {
+        flex-direction: column;
+    }
+
+    .form-builder-btn {
+        width: 100%;
+    }
+
+    .template-picker-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .template-picker-item-actions {
+        margin-top: 0.75rem;
+        justify-content: flex-end;
+    }
+}
+

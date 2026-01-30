@@ -24,6 +24,10 @@ import { $, on } from './utils/dom.js';
 import { debounce } from './utils/debounce.js';
 import { populateForm, clearForm as clearFormHelper } from './utils/formHelpers.js';
 import { authService } from './services/auth.js';
+import { FormBuilder } from './components/formBuilder/FormBuilder.js';
+import { FormRenderer } from './components/formBuilder/FormRenderer.js';
+import { TemplatePicker } from './components/formBuilder/TemplatePicker.js';
+import { formTemplateStorage } from './services/formTemplateStorage.js';
 
 class SolarSurveyApp {
     constructor() {
@@ -35,6 +39,11 @@ class SolarSurveyApp {
         this.saveIndicator = null;
         this.autoSaveDebounced = null;
         this.currentJob = null; // Currently selected job
+
+        // Custom Forms
+        this.formBuilder = null;
+        this.formRenderer = null;
+        this.currentCustomFormData = null;
     }
 
     init() {
@@ -248,6 +257,33 @@ class SolarSurveyApp {
                 actionMenuToggle.classList.toggle('active');
                 actionButtonsWrapper.classList.toggle('active');
             });
+        }
+
+        // Custom Forms navigation
+        const customFormsNav = $('#customFormsNav');
+        if (customFormsNav) {
+            on(customFormsNav, 'click', (e) => {
+                e.preventDefault();
+                this.showCustomForms();
+            });
+        }
+
+        // Back to survey button
+        const backToSurveyBtn = $('#backToSurveyBtn');
+        if (backToSurveyBtn) {
+            on(backToSurveyBtn, 'click', () => this.hideCustomForms());
+        }
+
+        // Create form button
+        const createFormBtn = $('#createFormBtn');
+        if (createFormBtn) {
+            on(createFormBtn, 'click', () => this.showFormBuilder());
+        }
+
+        // Open form button
+        const openFormBtn = $('#openFormBtn');
+        if (openFormBtn) {
+            on(openFormBtn, 'click', () => this.showTemplatePicker());
         }
     }
 
@@ -980,6 +1016,216 @@ class SolarSurveyApp {
         } catch (error) {
             console.error('Error clearing form:', error);
         }
+    }
+
+    // ==================== CUSTOM FORMS METHODS ====================
+
+    showCustomForms() {
+        const surveyContainer = $('.container');
+        const customFormsContainer = $('#customFormsContainer');
+
+        if (surveyContainer && customFormsContainer) {
+            surveyContainer.style.display = 'none';
+            customFormsContainer.style.display = 'block';
+        }
+    }
+
+    hideCustomForms() {
+        const surveyContainer = $('.container');
+        const customFormsContainer = $('#customFormsContainer');
+
+        // Cleanup any active builder/renderer
+        this.cleanupFormBuilder();
+        this.cleanupFormRenderer();
+
+        if (surveyContainer && customFormsContainer) {
+            customFormsContainer.style.display = 'none';
+            surveyContainer.style.display = 'block';
+        }
+    }
+
+    showFormBuilder(templateToEdit = null) {
+        const builderContainer = $('#formBuilderContainer');
+        const rendererContainer = $('#formRendererContainer');
+
+        if (!builderContainer) return;
+
+        // Hide renderer if visible
+        if (rendererContainer) {
+            rendererContainer.innerHTML = '';
+            rendererContainer.style.display = 'none';
+        }
+
+        // Cleanup existing builder
+        this.cleanupFormBuilder();
+
+        // Show builder container
+        builderContainer.style.display = 'block';
+
+        // Create builder
+        this.formBuilder = new FormBuilder(builderContainer, {
+            onSave: (template) => {
+                console.log('Template saved:', template);
+                this.cleanupFormBuilder();
+                builderContainer.style.display = 'none';
+            },
+            onCancel: () => {
+                this.cleanupFormBuilder();
+                builderContainer.style.display = 'none';
+            },
+            onPreview: (template) => {
+                // Preview handled by FormBuilder itself
+            }
+        });
+
+        // Load template if editing
+        if (templateToEdit) {
+            this.formBuilder.loadTemplate(templateToEdit);
+        }
+    }
+
+    showTemplatePicker() {
+        const picker = new TemplatePicker({
+            onSelect: (template) => {
+                this.showFormRenderer(template);
+            },
+            onEdit: (template) => {
+                this.showFormBuilder(template);
+            },
+            onDelete: (templateId) => {
+                console.log('Template deleted:', templateId);
+            }
+        });
+        picker.show();
+    }
+
+    showFormRenderer(template) {
+        const builderContainer = $('#formBuilderContainer');
+        const rendererContainer = $('#formRendererContainer');
+
+        if (!rendererContainer) return;
+
+        // Hide builder if visible
+        if (builderContainer) {
+            this.cleanupFormBuilder();
+            builderContainer.style.display = 'none';
+        }
+
+        // Cleanup existing renderer
+        this.cleanupFormRenderer();
+
+        // Show renderer container
+        rendererContainer.style.display = 'block';
+
+        // Create action buttons container
+        const actionsHtml = `
+            <div class="form-builder-renderer-actions" style="display: flex; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                <button type="button" class="btn-primary" id="submitCustomFormBtn">Save Form Data</button>
+                <button type="button" class="btn-secondary" id="clearCustomFormBtn">Clear</button>
+                <button type="button" class="btn-secondary" id="closeCustomFormBtn">Close Form</button>
+            </div>
+        `;
+
+        rendererContainer.innerHTML = actionsHtml + '<div id="customFormContent"></div>';
+
+        // Create renderer
+        const contentContainer = $('#customFormContent');
+        this.formRenderer = new FormRenderer(contentContainer, template, {
+            autoSave: true,
+            onValueChange: (name, value, data) => {
+                // Auto-save to localStorage
+                this.currentCustomFormData = data;
+            }
+        });
+
+        // Load any existing data for this template
+        const savedData = this.loadCustomFormData(template.id);
+        if (savedData) {
+            this.formRenderer.setData(savedData);
+        }
+
+        // Setup action button handlers
+        const submitBtn = $('#submitCustomFormBtn');
+        const clearBtn = $('#clearCustomFormBtn');
+        const closeBtn = $('#closeCustomFormBtn');
+
+        if (submitBtn) {
+            on(submitBtn, 'click', () => this.submitCustomForm(template));
+        }
+        if (clearBtn) {
+            on(clearBtn, 'click', () => {
+                if (confirm('Clear all form data?')) {
+                    this.formRenderer.clear();
+                    this.currentCustomFormData = null;
+                }
+            });
+        }
+        if (closeBtn) {
+            on(closeBtn, 'click', () => {
+                this.cleanupFormRenderer();
+                rendererContainer.style.display = 'none';
+                rendererContainer.innerHTML = '';
+            });
+        }
+    }
+
+    submitCustomForm(template) {
+        if (!this.formRenderer) return;
+
+        const validation = this.formRenderer.validate();
+        if (!validation.isValid) {
+            alert('Please fix the following errors:\n' + validation.errors.map(e => e.message).join('\n'));
+            this.formRenderer.focusFirstInvalid();
+            return;
+        }
+
+        const data = this.formRenderer.getData();
+
+        // Save form data
+        const result = formTemplateStorage.saveFormData(template.id, data, template.name);
+
+        if (result.success) {
+            alert('Form data saved successfully!');
+            // Optionally clear after save
+            if (confirm('Would you like to clear the form and start a new entry?')) {
+                this.formRenderer.clear();
+                this.currentCustomFormData = null;
+            }
+        } else {
+            alert('Error saving form data: ' + result.error);
+        }
+    }
+
+    loadCustomFormData(templateId) {
+        // Try to load most recent form data for this template
+        const formDataList = formTemplateStorage.listFormData(templateId);
+        if (formDataList.length > 0) {
+            const mostRecent = formDataList[0];
+            const result = formTemplateStorage.loadFormData(mostRecent.id);
+            if (result.success) {
+                return result.formData.data;
+            }
+        }
+        return null;
+    }
+
+    cleanupFormBuilder() {
+        if (this.formBuilder) {
+            this.formBuilder.destroy();
+            this.formBuilder = null;
+        }
+        const builderContainer = $('#formBuilderContainer');
+        if (builderContainer) {
+            builderContainer.innerHTML = '';
+        }
+    }
+
+    cleanupFormRenderer() {
+        if (this.formRenderer) {
+            this.formRenderer.destroy();
+            this.formRenderer = null;
+        }
+        this.currentCustomFormData = null;
     }
 }
 

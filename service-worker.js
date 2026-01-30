@@ -1,6 +1,6 @@
 // Service Worker for Solar Site Survey - Offline Support
 
-const CACHE_NAME = 'solar-survey-v11';
+const CACHE_NAME = 'solar-survey-v12';
 const urlsToCache = [
     './',
     './index.html',
@@ -27,6 +27,19 @@ const urlsToCache = [
     './js/utils/debounce.js',
     './js/utils/dom.js',
     './js/utils/formHelpers.js',
+    './js/services/formTemplateStorage.js',
+    './js/components/formBuilder/FormBuilder.js',
+    './js/components/formBuilder/FormRenderer.js',
+    './js/components/formBuilder/FieldFactory.js',
+    './js/components/formBuilder/FieldEditor.js',
+    './js/components/formBuilder/TemplatePicker.js',
+    './js/components/formBuilder/fields/BaseField.js',
+    './js/components/formBuilder/fields/TextField.js',
+    './js/components/formBuilder/fields/NumberField.js',
+    './js/components/formBuilder/fields/SelectField.js',
+    './js/components/formBuilder/fields/TextareaField.js',
+    './js/components/formBuilder/fields/PhotoField.js',
+    './js/components/formBuilder/fields/SignatureField.js',
     './manifest.json',
     'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',
