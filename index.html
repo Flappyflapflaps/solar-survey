@@ -45,23 +45,23 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Form Type Selector -->
-        <div class="form-type-selector" id="formTypeSelector">
-            <button type="button" class="form-type-btn active" data-form="solar">
-                <span class="form-type-icon">☀️</span>
-                <span class="form-type-label">Solar Survey</span>
-            </button>
-            <button type="button" class="form-type-btn" data-form="ashp">
-                <span class="form-type-icon">🔥</span>
-                <span class="form-type-label">ASHP Inspection</span>
-            </button>
-            <button type="button" class="form-type-btn" data-form="custom">
-                <span class="form-type-icon">📝</span>
-                <span class="form-type-label">Form Builder</span>
-            </button>
-        </div>
+    <!-- Form Type Selector (outside containers so always visible) -->
+    <div class="form-type-selector" id="formTypeSelector">
+        <button type="button" class="form-type-btn active" data-form="solar">
+            <span class="form-type-icon">☀️</span>
+            <span class="form-type-label">Solar Survey</span>
+        </button>
+        <button type="button" class="form-type-btn" data-form="ashp">
+            <span class="form-type-icon">🔥</span>
+            <span class="form-type-label">ASHP Inspection</span>
+        </button>
+        <button type="button" class="form-type-btn" data-form="custom">
+            <span class="form-type-icon">📝</span>
+            <span class="form-type-label">Form Builder</span>
+        </button>
+    </div>
 
+    <div class="container" id="mainSurveyContainer">
         <!-- Header with Progress -->
         <header class="header">
             <div class="header-brand">
@@ -1394,14 +1394,10 @@
 
     <!-- Custom Forms Section (Hidden by default) -->
     <div class="container" id="customFormsContainer" style="display: none;">
-        <header class="header">
-            <div class="header-brand">
-                <h1>Custom Forms</h1>
-                <button type="button" class="btn-secondary" id="backToSurveyBtn" style="margin-left: auto;">← Back to Survey</button>
-            </div>
-        </header>
-
         <div class="form-section">
+            <h2>Custom Form Builder</h2>
+            <p class="section-hint">Create custom forms with text, numbers, dropdowns, photos, and signatures.</p>
+
             <div class="custom-forms-actions" style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
                 <button type="button" class="btn-primary" id="createFormBtn">+ Create New Form</button>
                 <button type="button" class="btn-secondary" id="openFormBtn">Open Saved Form</button>

@@ -25,7 +25,7 @@ class FormSwitcher {
             this.solarForm = document.getElementById('surveyForm');
             this.ashpForm = document.getElementById('ashpForm');
             this.customFormsContainer = document.getElementById('customFormsContainer');
-            this.mainContainer = this.solarForm?.closest('.container');
+            this.mainContainer = document.getElementById('mainSurveyContainer');
             this.formSelector = document.getElementById('formTypeSelector');
 
             console.log('FormSwitcher: Elements found:', {
