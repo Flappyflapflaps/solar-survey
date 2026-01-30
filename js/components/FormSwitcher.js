@@ -10,6 +10,8 @@ class FormSwitcher {
         this.currentForm = 'solar';
         this.solarForm = null;
         this.ashpForm = null;
+        this.customFormsContainer = null;
+        this.mainContainer = null;
         this.formSelector = null;
         this.ashpButtonGroups = [];
         this.signaturePads = {};
@@ -22,11 +24,14 @@ class FormSwitcher {
 
             this.solarForm = document.getElementById('surveyForm');
             this.ashpForm = document.getElementById('ashpForm');
+            this.customFormsContainer = document.getElementById('customFormsContainer');
+            this.mainContainer = this.solarForm?.closest('.container');
             this.formSelector = document.getElementById('formTypeSelector');
 
             console.log('FormSwitcher: Elements found:', {
                 solarForm: !!this.solarForm,
                 ashpForm: !!this.ashpForm,
+                customFormsContainer: !!this.customFormsContainer,
                 formSelector: !!this.formSelector
             });
 
@@ -258,26 +263,36 @@ class FormSwitcher {
 
         // Update title
         const titleEl = document.getElementById('formTitle');
-        if (titleEl) {
-            titleEl.textContent = formType === 'solar' ? 'Solar Site Survey' : 'ASHP Post Inspection';
-        }
 
         // Show/hide forms and navigation
         const solarNav = document.getElementById('navMenu');
+        const header = document.querySelector('.header');
 
         if (formType === 'solar') {
+            if (titleEl) titleEl.textContent = 'Solar Site Survey';
+            if (this.mainContainer) this.mainContainer.style.display = 'block';
             if (this.solarForm) this.solarForm.style.display = 'block';
             if (this.ashpForm) this.ashpForm.style.display = 'none';
+            if (this.customFormsContainer) this.customFormsContainer.style.display = 'none';
             if (solarNav) solarNav.style.display = 'block';
-        } else {
+            if (header) header.style.display = 'block';
+        } else if (formType === 'ashp') {
+            if (titleEl) titleEl.textContent = 'ASHP Post Inspection';
+            if (this.mainContainer) this.mainContainer.style.display = 'block';
             if (this.solarForm) this.solarForm.style.display = 'none';
             if (this.ashpForm) this.ashpForm.style.display = 'block';
+            if (this.customFormsContainer) this.customFormsContainer.style.display = 'none';
             if (solarNav) solarNav.style.display = 'none';
+            if (header) header.style.display = 'block';
+        } else if (formType === 'custom') {
+            if (this.mainContainer) this.mainContainer.style.display = 'none';
+            if (this.customFormsContainer) this.customFormsContainer.style.display = 'block';
         }
 
         console.log('FormSwitcher: Switch complete, forms displayed:', {
             solarForm: this.solarForm?.style.display,
-            ashpForm: this.ashpForm?.style.display
+            ashpForm: this.ashpForm?.style.display,
+            customForms: this.customFormsContainer?.style.display
         });
 
         // Scroll to top

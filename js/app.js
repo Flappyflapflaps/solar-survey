@@ -1025,27 +1025,17 @@ class SolarSurveyApp {
     // ==================== CUSTOM FORMS METHODS ====================
 
     showCustomForms() {
-        const surveyContainer = $('.container');
-        const customFormsContainer = $('#customFormsContainer');
-
-        if (surveyContainer && customFormsContainer) {
-            surveyContainer.style.display = 'none';
-            customFormsContainer.style.display = 'block';
-        }
+        // Use formSwitcher to handle the switch
+        formSwitcher.switchForm('custom');
     }
 
     hideCustomForms() {
-        const surveyContainer = $('.container');
-        const customFormsContainer = $('#customFormsContainer');
-
         // Cleanup any active builder/renderer
         this.cleanupFormBuilder();
         this.cleanupFormRenderer();
 
-        if (surveyContainer && customFormsContainer) {
-            customFormsContainer.style.display = 'none';
-            surveyContainer.style.display = 'block';
-        }
+        // Switch back to solar form using formSwitcher
+        formSwitcher.switchForm('solar');
     }
 
     showFormBuilder(templateToEdit = null) {
