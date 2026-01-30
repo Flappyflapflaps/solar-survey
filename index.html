@@ -949,6 +949,443 @@
                 </div>
             </div>
         </form>
+
+        <!-- ASHP Post Inspection Form (Hidden by default) -->
+        <form id="ashpForm" style="display: none;">
+            <!-- ASHP Navigation Menu -->
+            <nav class="nav-menu ashp-nav" id="ashpNavMenu">
+                <button type="button" class="nav-toggle" id="ashpNavToggle">☰ Sections</button>
+                <div class="nav-items" id="ashpNavItems">
+                    <a href="#ashp-title" class="nav-item">Title Page</a>
+                    <a href="#ashp-unit" class="nav-item">ASHP Unit</a>
+                    <a href="#ashp-cylinder" class="nav-item">Cylinder & Vessels</a>
+                    <a href="#ashp-controls" class="nav-item">Controls</a>
+                    <a href="#ashp-emitters" class="nav-item">Emitters</a>
+                    <a href="#ashp-pipework" class="nav-item">Pipework</a>
+                    <a href="#ashp-general" class="nav-item">General & Notes</a>
+                    <a href="#ashp-signatures" class="nav-item">Signatures</a>
+                </div>
+            </nav>
+
+            <!-- Title Page Section -->
+            <section id="ashp-title" class="form-section">
+                <h2>Title Page</h2>
+
+                <div class="form-group">
+                    <label for="ashpCustomer">Customer *</label>
+                    <select id="ashpCustomer" name="ashpCustomer" required>
+                        <option value="">Select customer type...</option>
+                        <option value="Newark & Sherwood">Newark & Sherwood</option>
+                        <option value="Eco">Eco</option>
+                        <option value="Private">Private</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ashpConductedDate">Conducted On</label>
+                        <input type="datetime-local" id="ashpConductedDate" name="ashpConductedDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="ashpPreparedBy">Prepared By</label>
+                        <input type="text" id="ashpPreparedBy" name="ashpPreparedBy" placeholder="Inspector name">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="ashpLocation">Location</label>
+                    <input type="text" id="ashpLocation" name="ashpLocation" placeholder="Property address">
+                </div>
+            </section>
+
+            <!-- ASHP Unit Section -->
+            <section id="ashp-unit" class="form-section">
+                <h2>ASHP Unit</h2>
+
+                <div class="form-group">
+                    <label for="ashpUnitLocation">Unit Location</label>
+                    <select id="ashpUnitLocation" name="ashpUnitLocation">
+                        <option value="">Select location...</option>
+                        <option value="Rear">Rear</option>
+                        <option value="Side">Side</option>
+                        <option value="Front">Front</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ashpMake">Make</label>
+                        <select id="ashpMake" name="ashpMake">
+                            <option value="">Select make...</option>
+                            <option value="Vaillant">Vaillant</option>
+                            <option value="Samsung">Samsung</option>
+                            <option value="Mitsubishi">Mitsubishi</option>
+                            <option value="LG">LG</option>
+                            <option value="Daikin">Daikin</option>
+                            <option value="Viessmann">Viessmann</option>
+                            <option value="Panasonic">Panasonic</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ashpModel">Model</label>
+                        <input type="text" id="ashpModel" name="ashpModel" placeholder="Model number">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ashpMounting">Mounting</label>
+                        <select id="ashpMounting" name="ashpMounting">
+                            <option value="">Select mounting...</option>
+                            <option value="Feet">Feet</option>
+                            <option value="Wall Bracket">Wall Bracket</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ashpAntiFreezeType">Anti Freeze Type</label>
+                        <select id="ashpAntiFreezeType" name="ashpAntiFreezeType">
+                            <option value="">Select type...</option>
+                            <option value="Mechanical">Mechanical</option>
+                            <option value="Chemical">Chemical</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="ashpCondenseRoute">Condense Route</label>
+                    <select id="ashpCondenseRoute" name="ashpCondenseRoute">
+                        <option value="">Select route...</option>
+                        <option value="Drain">Drain</option>
+                        <option value="Soakaway">Soakaway</option>
+                        <option value="Pumped">Pumped</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Clearances Compliant</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ashpClearancesCompliant" data-value="Yes">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ashpClearancesCompliant" data-value="No">No</button>
+                            <button type="button" class="btn-choice" data-field="ashpClearancesCompliant" data-value="N/A">N/A</button>
+                        </div>
+                        <input type="hidden" id="ashpClearancesCompliant" name="ashpClearancesCompliant" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Unit Level</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ashpUnitLevel" data-value="Yes">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ashpUnitLevel" data-value="No">No</button>
+                            <button type="button" class="btn-choice" data-field="ashpUnitLevel" data-value="N/A">N/A</button>
+                        </div>
+                        <input type="hidden" id="ashpUnitLevel" name="ashpUnitLevel" value="">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Unit Undamaged</label>
+                    <div class="button-group">
+                        <button type="button" class="btn-choice" data-field="ashpUnitUndamaged" data-value="Yes">Yes</button>
+                        <button type="button" class="btn-choice" data-field="ashpUnitUndamaged" data-value="No">No</button>
+                        <button type="button" class="btn-choice" data-field="ashpUnitUndamaged" data-value="N/A">N/A</button>
+                    </div>
+                    <input type="hidden" id="ashpUnitUndamaged" name="ashpUnitUndamaged" value="">
+                </div>
+            </section>
+
+            <!-- Cylinder & Vessels Section -->
+            <section id="ashp-cylinder" class="form-section">
+                <h2>Cylinder & Vessels</h2>
+
+                <div class="form-group">
+                    <label for="ashpCylinderLocation">Location</label>
+                    <input type="text" id="ashpCylinderLocation" name="ashpCylinderLocation" placeholder="Cylinder location">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ashpCylinderMake">Make</label>
+                        <select id="ashpCylinderMake" name="ashpCylinderMake">
+                            <option value="">Select make...</option>
+                            <option value="Vaillant">Vaillant</option>
+                            <option value="Samsung">Samsung</option>
+                            <option value="Mitsubishi">Mitsubishi</option>
+                            <option value="LG">LG</option>
+                            <option value="Daikin">Daikin</option>
+                            <option value="Viessmann">Viessmann</option>
+                            <option value="Panasonic">Panasonic</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ashpCylinderSize">Size (ltr)</label>
+                        <input type="number" id="ashpCylinderSize" name="ashpCylinderSize" placeholder="Litres" inputmode="numeric">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Vessels Correct</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ashpVesselsCorrect" data-value="Yes">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ashpVesselsCorrect" data-value="No">No</button>
+                            <button type="button" class="btn-choice" data-field="ashpVesselsCorrect" data-value="N/A">N/A</button>
+                        </div>
+                        <input type="hidden" id="ashpVesselsCorrect" name="ashpVesselsCorrect" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>PRV Pipework Complete</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ashpPRVComplete" data-value="Yes">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ashpPRVComplete" data-value="No">No</button>
+                            <button type="button" class="btn-choice" data-field="ashpPRVComplete" data-value="N/A">N/A</button>
+                        </div>
+                        <input type="hidden" id="ashpPRVComplete" name="ashpPRVComplete" value="">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Controls Section -->
+            <section id="ashp-controls" class="form-section">
+                <h2>Controls</h2>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ashpControlsType">Type of Controls</label>
+                        <select id="ashpControlsType" name="ashpControlsType">
+                            <option value="">Select type...</option>
+                            <option value="Smart Wired">Smart Wired</option>
+                            <option value="Smart RF">Smart RF</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="ashpSettings">Settings</label>
+                        <select id="ashpSettings" name="ashpSettings">
+                            <option value="">Select settings...</option>
+                            <option value="Auto">Auto</option>
+                            <option value="Manual">Manual</option>
+                            <option value="Comfort">Comfort</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Customer Received Instructions</label>
+                    <div class="button-group">
+                        <button type="button" class="btn-choice" data-field="ashpCustomerInstructions" data-value="Yes">Yes</button>
+                        <button type="button" class="btn-choice" data-field="ashpCustomerInstructions" data-value="No">No</button>
+                        <button type="button" class="btn-choice" data-field="ashpCustomerInstructions" data-value="N/A">N/A</button>
+                    </div>
+                    <input type="hidden" id="ashpCustomerInstructions" name="ashpCustomerInstructions" value="">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ashpHeatingCurve">Heating Curve</label>
+                        <input type="number" id="ashpHeatingCurve" name="ashpHeatingCurve" placeholder="Value" inputmode="decimal" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="ashpFlowrate">Flowrate (lph)</label>
+                        <input type="number" id="ashpFlowrate" name="ashpFlowrate" placeholder="Litres per hour" inputmode="numeric">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Emitters Section -->
+            <section id="ashp-emitters" class="form-section">
+                <h2>Emitters</h2>
+
+                <div class="form-group">
+                    <label for="ashpEmitterType">Emitter Type</label>
+                    <select id="ashpEmitterType" name="ashpEmitterType">
+                        <option value="">Select type...</option>
+                        <option value="Radiators">Radiators</option>
+                        <option value="Underfloor">Underfloor</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Radiators Level & Unmarked</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ashpRadiatorsLevel" data-value="Yes">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ashpRadiatorsLevel" data-value="No">No</button>
+                            <button type="button" class="btn-choice" data-field="ashpRadiatorsLevel" data-value="N/A">N/A</button>
+                        </div>
+                        <input type="hidden" id="ashpRadiatorsLevel" name="ashpRadiatorsLevel" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Radiators Free from Leaks</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ashpRadiatorsFreeLeaks" data-value="Yes">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ashpRadiatorsFreeLeaks" data-value="No">No</button>
+                            <button type="button" class="btn-choice" data-field="ashpRadiatorsFreeLeaks" data-value="N/A">N/A</button>
+                        </div>
+                        <input type="hidden" id="ashpRadiatorsFreeLeaks" name="ashpRadiatorsFreeLeaks" value="">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>By-pass Radiator Correct Location</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ashpBypassCorrect" data-value="Yes">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ashpBypassCorrect" data-value="No">No</button>
+                            <button type="button" class="btn-choice" data-field="ashpBypassCorrect" data-value="N/A">N/A</button>
+                        </div>
+                        <input type="hidden" id="ashpBypassCorrect" name="ashpBypassCorrect" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>TRVs Fitted Correctly</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ashpTRVsFitted" data-value="Yes">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ashpTRVsFitted" data-value="No">No</button>
+                            <button type="button" class="btn-choice" data-field="ashpTRVsFitted" data-value="N/A">N/A</button>
+                        </div>
+                        <input type="hidden" id="ashpTRVsFitted" name="ashpTRVsFitted" value="">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pipework Section -->
+            <section id="ashp-pipework" class="form-section">
+                <h2>Pipework</h2>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Pipework Installed Correctly</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ashpPipeworkInstalled" data-value="Yes">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ashpPipeworkInstalled" data-value="No">No</button>
+                            <button type="button" class="btn-choice" data-field="ashpPipeworkInstalled" data-value="N/A">N/A</button>
+                        </div>
+                        <input type="hidden" id="ashpPipeworkInstalled" name="ashpPipeworkInstalled" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Pipework Free from Leaks/Damage</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ashpPipeworkFreeLeaks" data-value="Yes">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ashpPipeworkFreeLeaks" data-value="No">No</button>
+                            <button type="button" class="btn-choice" data-field="ashpPipeworkFreeLeaks" data-value="N/A">N/A</button>
+                        </div>
+                        <input type="hidden" id="ashpPipeworkFreeLeaks" name="ashpPipeworkFreeLeaks" value="">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Pipework Correctly Clipped/Supported</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ashpPipeworkClipped" data-value="Yes">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ashpPipeworkClipped" data-value="No">No</button>
+                            <button type="button" class="btn-choice" data-field="ashpPipeworkClipped" data-value="N/A">N/A</button>
+                        </div>
+                        <input type="hidden" id="ashpPipeworkClipped" name="ashpPipeworkClipped" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Pipework Correctly Insulated</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ashpPipeworkInsulated" data-value="Yes">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ashpPipeworkInsulated" data-value="No">No</button>
+                            <button type="button" class="btn-choice" data-field="ashpPipeworkInsulated" data-value="N/A">N/A</button>
+                        </div>
+                        <input type="hidden" id="ashpPipeworkInsulated" name="ashpPipeworkInsulated" value="">
+                    </div>
+                </div>
+            </section>
+
+            <!-- General & Notes Section -->
+            <section id="ashp-general" class="form-section">
+                <h2>General</h2>
+
+                <div class="form-group">
+                    <label>Installation Defect Free</label>
+                    <div class="button-group">
+                        <button type="button" class="btn-choice" data-field="ashpDefectFree" data-value="Yes">Yes</button>
+                        <button type="button" class="btn-choice" data-field="ashpDefectFree" data-value="No">No</button>
+                        <button type="button" class="btn-choice" data-field="ashpDefectFree" data-value="N/A">N/A</button>
+                    </div>
+                    <input type="hidden" id="ashpDefectFree" name="ashpDefectFree" value="">
+                    <div class="notes-field" id="ashpDefectFreeNotes" style="display: none;">
+                        <label for="ashpDefectDetails">Defect Details (required if No):</label>
+                        <textarea id="ashpDefectDetails" name="ashpDefectDetails" placeholder="Describe defects found..."></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="ashpNotes">Notes</label>
+                    <textarea id="ashpNotes" name="ashpNotes" rows="5" placeholder="Additional notes..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Upload Photos</label>
+                    <input type="file" id="ashpPhotos" name="ashpPhotos" accept="image/*" multiple>
+                    <div class="file-preview" id="ashpPhotosPreview"></div>
+                </div>
+            </section>
+
+            <!-- Signatures Section -->
+            <section id="ashp-signatures" class="form-section">
+                <h2>Signatures</h2>
+
+                <div class="form-group">
+                    <label>Customer Signature</label>
+                    <div class="signature-pad-container">
+                        <canvas id="ashpCustomerSignature" class="signature-pad" width="300" height="150"></canvas>
+                        <button type="button" class="btn-secondary signature-clear" data-target="ashpCustomerSignature">Clear</button>
+                    </div>
+                    <input type="hidden" id="ashpCustomerSignatureData" name="ashpCustomerSignatureData" value="">
+                    <div class="form-group" style="margin-top: 0.5rem;">
+                        <label for="ashpCustomerSignatureDate">Date</label>
+                        <input type="date" id="ashpCustomerSignatureDate" name="ashpCustomerSignatureDate">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Inspector Signature</label>
+                    <div class="signature-pad-container">
+                        <canvas id="ashpInspectorSignature" class="signature-pad" width="300" height="150"></canvas>
+                        <button type="button" class="btn-secondary signature-clear" data-target="ashpInspectorSignature">Clear</button>
+                    </div>
+                    <input type="hidden" id="ashpInspectorSignatureData" name="ashpInspectorSignatureData" value="">
+                    <div class="form-group" style="margin-top: 0.5rem;">
+                        <label for="ashpInspectorSignatureDate">Date</label>
+                        <input type="date" id="ashpInspectorSignatureDate" name="ashpInspectorSignatureDate">
+                    </div>
+                </div>
+            </section>
+
+            <!-- ASHP Action Buttons -->
+            <div class="form-actions">
+                <button type="button" class="action-menu-toggle" id="ashpActionMenuToggle">
+                    <span class="burger-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                    Actions
+                </button>
+                <div class="action-buttons-wrapper" id="ashpActionButtonsWrapper">
+                    <button type="button" class="btn-primary" id="ashpExportPdfBtn">Export to PDF</button>
+                    <button type="button" class="btn-secondary" id="ashpExportCsvBtn">Export to CSV</button>
+                    <button type="button" class="btn-draft" id="ashpSaveDraftBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+                        </svg>
+                        Save Draft
+                    </button>
+                    <button type="button" class="btn-draft" id="ashpLoadDraftBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                        </svg>
+                        Load Draft
+                    </button>
+                    <button type="button" class="btn-secondary" id="ashpClearBtn">Clear Form</button>
+                </div>
+            </div>
+        </form>
     </div>
 
     <!-- Custom Forms Section (Hidden by default) -->

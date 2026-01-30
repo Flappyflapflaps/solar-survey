@@ -28,6 +28,7 @@ import { FormBuilder } from './components/formBuilder/FormBuilder.js';
 import { FormRenderer } from './components/formBuilder/FormRenderer.js';
 import { TemplatePicker } from './components/formBuilder/TemplatePicker.js';
 import { formTemplateStorage } from './services/formTemplateStorage.js';
+import { formSwitcher } from './components/FormSwitcher.js';
 
 class SolarSurveyApp {
     constructor() {
@@ -73,6 +74,9 @@ class SolarSurveyApp {
 
         // Handle Dropbox OAuth callback
         await this.handleDropboxCallback();
+
+        // Initialize form switcher for ASHP form
+        formSwitcher.init();
     }
 
     async initializeUser() {

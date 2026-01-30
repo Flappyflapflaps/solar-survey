@@ -2672,3 +2672,118 @@ a:focus-visible {
     }
 }
 
+/* ===================================
+   FORM TYPE SELECTOR
+   =================================== */
+.form-type-selector {
+    display: flex;
+    background: var(--secondary-color);
+    padding: 0.5rem;
+    gap: 0.5rem;
+}
+
+.form-type-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.75rem 0.5rem;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.form-type-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.form-type-btn.active {
+    background: white;
+    color: var(--secondary-color);
+    border-color: var(--primary-color);
+}
+
+.form-type-icon {
+    font-size: 1.5rem;
+}
+
+.form-type-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ===================================
+   SIGNATURE PAD STYLES
+   =================================== */
+.signature-pad-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.signature-pad {
+    width: 100%;
+    max-width: 400px;
+    height: 150px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    background-color: white;
+    cursor: crosshair;
+    touch-action: none;
+}
+
+.signature-pad:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.signature-clear {
+    width: fit-content;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* ASHP Form specific nav */
+.ashp-nav {
+    position: sticky;
+    top: 80px;
+    z-index: 99;
+}
+
+/* Desktop adjustments for form selector */
+@media (min-width: 768px) {
+    .form-type-selector {
+        justify-content: center;
+        padding: 0.75rem;
+    }
+
+    .form-type-btn {
+        flex: 0 1 200px;
+        flex-direction: row;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+    }
+
+    .form-type-icon {
+        font-size: 1.25rem;
+    }
+
+    .form-type-label {
+        font-size: 0.875rem;
+    }
+
+    .signature-pad {
+        height: 200px;
+    }
+}
+
