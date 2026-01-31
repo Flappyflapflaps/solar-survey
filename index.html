@@ -47,18 +47,14 @@
 <body>
     <!-- Form Type Selector (outside containers so always visible) -->
     <div class="form-type-selector" id="formTypeSelector">
-        <button type="button" class="form-type-btn active" data-form="solar">
-            <span class="form-type-icon">☀️</span>
-            <span class="form-type-label">Solar Survey</span>
-        </button>
-        <button type="button" class="form-type-btn" data-form="ashp">
-            <span class="form-type-icon">🔥</span>
-            <span class="form-type-label">ASHP Inspection</span>
-        </button>
-        <button type="button" class="form-type-btn" data-form="custom">
-            <span class="form-type-icon">📝</span>
-            <span class="form-type-label">Form Builder</span>
-        </button>
+        <label for="formTypeDropdown" class="form-type-label-text">Survey Type:</label>
+        <select id="formTypeDropdown" class="form-type-dropdown">
+            <option value="solar">Solar Survey</option>
+            <option value="siteSurvey">Site Survey (Full)</option>
+            <option value="ashp">ASHP Inspection</option>
+            <option value="jobCompleted">Job Completed</option>
+            <option value="custom">Form Builder</option>
+        </select>
     </div>
 
     <div class="container" id="mainSurveyContainer">
@@ -1387,6 +1383,961 @@
                         Load Draft
                     </button>
                     <button type="button" class="btn-secondary" id="ashpClearBtn">Clear Form</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Site Survey Form (Full PDF-based survey - Hidden by default) -->
+        <form id="siteSurveyForm" style="display: none;">
+            <!-- Site Survey Navigation Menu -->
+            <nav class="nav-menu site-survey-nav" id="siteSurveyNavMenu">
+                <button type="button" class="nav-toggle" id="siteSurveyNavToggle">☰ Sections</button>
+                <div class="nav-items" id="siteSurveyNavItems">
+                    <a href="#ss-customer" class="nav-item">Customer Details</a>
+                    <a href="#ss-property" class="nav-item">Property Details</a>
+                    <a href="#ss-building" class="nav-item">Building</a>
+                    <a href="#ss-roof1" class="nav-item">Roof Aspect 1</a>
+                    <a href="#ss-roof2" class="nav-item">Roof Aspect 2</a>
+                    <a href="#ss-electrical" class="nav-item">Electrical</a>
+                    <a href="#ss-notes" class="nav-item">Notes & Plans</a>
+                </div>
+            </nav>
+
+            <!-- Customer Details Section -->
+            <section id="ss-customer" class="form-section">
+                <h2>Customer Details</h2>
+
+                <div class="form-group">
+                    <label for="ssCarriedOutBy">Carried out by:</label>
+                    <select id="ssCarriedOutBy" name="ssCarriedOutBy">
+                        <option value="">Select surveyor...</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssCustomerName">Name:</label>
+                        <input type="text" id="ssCustomerName" name="ssCustomerName" placeholder="Customer name">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssAddress">Address:</label>
+                        <input type="text" id="ssAddress" name="ssAddress" placeholder="Full address">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssMobile">Mobile:</label>
+                        <input type="tel" id="ssMobile" name="ssMobile" placeholder="Mobile number" inputmode="tel">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssPostCode">Post Code:</label>
+                        <input type="text" id="ssPostCode" name="ssPostCode" placeholder="Post code">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssHome">Home:</label>
+                        <input type="tel" id="ssHome" name="ssHome" placeholder="Home phone" inputmode="tel">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssWhat3Words">What 3 Words:</label>
+                        <input type="text" id="ssWhat3Words" name="ssWhat3Words" placeholder="///">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="ssEmail">Email:</label>
+                    <input type="email" id="ssEmail" name="ssEmail" placeholder="email@example.com" inputmode="email">
+                </div>
+            </section>
+
+            <!-- Property Details Section -->
+            <section id="ss-property" class="form-section">
+                <h2>Property Details</h2>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Conservation Area:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssConservationArea" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssConservationArea" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssConservationArea" name="ssConservationArea" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Terrain:</label>
+                        <div class="quick-options" data-target="ssTerrain">
+                            <button type="button" class="quick-btn">Town</button>
+                            <button type="button" class="quick-btn">Country</button>
+                            <button type="button" class="quick-btn">Coastal</button>
+                        </div>
+                        <input type="text" id="ssTerrain" name="ssTerrain" placeholder="Or specify">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Property Exposed:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssPropertyExposed" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssPropertyExposed" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssPropertyExposed" name="ssPropertyExposed" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Parking Available:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssParkingAvailable" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssParkingAvailable" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssParkingAvailable" name="ssParkingAvailable" value="">
+                    </div>
+                </div>
+
+                <div class="form-group" id="ssParkingSpecGroup" style="display: none;">
+                    <label for="ssParkingSpec">If no, please specify:</label>
+                    <input type="text" id="ssParkingSpec" name="ssParkingSpec" placeholder="Parking details">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssOccupancyType">Occupancy Type:</label>
+                        <input type="text" id="ssOccupancyType" name="ssOccupancyType" placeholder="e.g. Owner occupied">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssKwhPerAnnum">kWh per annum:</label>
+                        <input type="number" id="ssKwhPerAnnum" name="ssKwhPerAnnum" placeholder="kWh" inputmode="numeric">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>DNO:</label>
+                    <div class="quick-options" data-target="ssDno">
+                        <button type="button" class="quick-btn">SSE</button>
+                        <button type="button" class="quick-btn">SP Network</button>
+                    </div>
+                    <input type="text" id="ssDno" name="ssDno" placeholder="Or specify other">
+                </div>
+            </section>
+
+            <!-- Building Section -->
+            <section id="ss-building" class="form-section">
+                <h2>Building</h2>
+
+                <div class="form-group">
+                    <label>Construction:</label>
+                    <div class="quick-options" data-target="ssConstruction">
+                        <button type="button" class="quick-btn">Trad stone</button>
+                        <button type="button" class="quick-btn">Brick</button>
+                        <button type="button" class="quick-btn">Block</button>
+                        <button type="button" class="quick-btn">Timber frame</button>
+                    </div>
+                    <input type="text" id="ssConstruction" name="ssConstruction" placeholder="Or specify other">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssWallThickness">Thickness of wall:</label>
+                        <input type="text" id="ssWallThickness" name="ssWallThickness" placeholder="e.g. 300mm">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssInternalWalkConstruction">Internal walk construction:</label>
+                        <input type="text" id="ssInternalWalkConstruction" name="ssInternalWalkConstruction" placeholder="Construction type">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Type of Building:</label>
+                    <div class="quick-options" data-target="ssBuildingType">
+                        <button type="button" class="quick-btn">Bungalow</button>
+                        <button type="button" class="quick-btn">2 storey</button>
+                        <button type="button" class="quick-btn">3 storey</button>
+                        <button type="button" class="quick-btn">Townhouse</button>
+                    </div>
+                    <input type="text" id="ssBuildingType" name="ssBuildingType" placeholder="Or specify other">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Protected Species:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssProtectedSpecies" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssProtectedSpecies" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssProtectedSpecies" name="ssProtectedSpecies" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Nests:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssNests" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssNests" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssNests" name="ssNests" value="">
+                    </div>
+                </div>
+
+                <div class="form-group" id="ssNestSpecGroup" style="display: none;">
+                    <label for="ssNestSpec">Type of nest/species:</label>
+                    <input type="text" id="ssNestSpec" name="ssNestSpec" placeholder="Nest/species details">
+                </div>
+            </section>
+
+            <!-- Roof Aspect 1 Section -->
+            <section id="ss-roof1" class="form-section">
+                <h2>Roof Aspect 1</h2>
+                <p class="section-hint">Roof drawing(s) to be completed</p>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Covering Type:</label>
+                        <div class="quick-options" data-target="ssRoof1CoveringType">
+                            <button type="button" class="quick-btn">Slate</button>
+                            <button type="button" class="quick-btn">Tile</button>
+                            <button type="button" class="quick-btn">Concrete</button>
+                            <button type="button" class="quick-btn">Metal</button>
+                        </div>
+                        <input type="text" id="ssRoof1CoveringType" name="ssRoof1CoveringType" placeholder="Or specify">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssRoof1SlopeLength">Slope length:</label>
+                        <input type="text" id="ssRoof1SlopeLength" name="ssRoof1SlopeLength" placeholder="e.g. 5m">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssRoof1OrientationFromS">Orientation from S:</label>
+                        <input type="text" id="ssRoof1OrientationFromS" name="ssRoof1OrientationFromS" placeholder="e.g. 15° E">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssRoof1WidthAtGutter">Width at Gutter:</label>
+                        <input type="text" id="ssRoof1WidthAtGutter" name="ssRoof1WidthAtGutter" placeholder="e.g. 8m">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssRoof1WidthAtRidge">Width at Ridge:</label>
+                        <input type="text" id="ssRoof1WidthAtRidge" name="ssRoof1WidthAtRidge" placeholder="e.g. 8m">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssRoof1Inclination">Inclination:</label>
+                        <input type="text" id="ssRoof1Inclination" name="ssRoof1Inclination" placeholder="e.g. 35°">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssRoof1RafterWidth">Rafter Width:</label>
+                        <input type="text" id="ssRoof1RafterWidth" name="ssRoof1RafterWidth" placeholder="e.g. 50mm">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssRoof1RafterDepth">Rafter Depth:</label>
+                        <input type="text" id="ssRoof1RafterDepth" name="ssRoof1RafterDepth" placeholder="e.g. 100mm">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssRoof1CentreSpacings">Centre spacings:</label>
+                        <input type="text" id="ssRoof1CentreSpacings" name="ssRoof1CentreSpacings" placeholder="e.g. 400mm">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssRoof1GutterHeight">Gutter height:</label>
+                        <input type="text" id="ssRoof1GutterHeight" name="ssRoof1GutterHeight" placeholder="e.g. 4m">
+                    </div>
+                    <div class="form-group">
+                        <label>Is roof under warranty:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssRoof1UnderWarranty" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssRoof1UnderWarranty" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssRoof1UnderWarranty" name="ssRoof1UnderWarranty" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Shading Present:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssRoof1ShadingPresent" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssRoof1ShadingPresent" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssRoof1ShadingPresent" name="ssRoof1ShadingPresent" value="">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Roof Aspect 2 Section -->
+            <section id="ss-roof2" class="form-section">
+                <h2>Roof Aspect 2</h2>
+                <p class="section-hint">For additional aspects note on reverse</p>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Covering Type:</label>
+                        <div class="quick-options" data-target="ssRoof2CoveringType">
+                            <button type="button" class="quick-btn">Slate</button>
+                            <button type="button" class="quick-btn">Tile</button>
+                            <button type="button" class="quick-btn">Concrete</button>
+                            <button type="button" class="quick-btn">Metal</button>
+                        </div>
+                        <input type="text" id="ssRoof2CoveringType" name="ssRoof2CoveringType" placeholder="Or specify">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssRoof2SlopeLength">Slope length:</label>
+                        <input type="text" id="ssRoof2SlopeLength" name="ssRoof2SlopeLength" placeholder="e.g. 5m">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssRoof2OrientationFromS">Orientation from S:</label>
+                        <input type="text" id="ssRoof2OrientationFromS" name="ssRoof2OrientationFromS" placeholder="e.g. 15° E">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssRoof2WidthAtGutter">Width at Gutter:</label>
+                        <input type="text" id="ssRoof2WidthAtGutter" name="ssRoof2WidthAtGutter" placeholder="e.g. 8m">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssRoof2WidthAtRidge">Width at Ridge:</label>
+                        <input type="text" id="ssRoof2WidthAtRidge" name="ssRoof2WidthAtRidge" placeholder="e.g. 8m">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssRoof2Inclination">Inclination:</label>
+                        <input type="text" id="ssRoof2Inclination" name="ssRoof2Inclination" placeholder="e.g. 35°">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssRoof2RafterWidth">Rafter Width:</label>
+                        <input type="text" id="ssRoof2RafterWidth" name="ssRoof2RafterWidth" placeholder="e.g. 50mm">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssRoof2RafterDepth">Rafter Depth:</label>
+                        <input type="text" id="ssRoof2RafterDepth" name="ssRoof2RafterDepth" placeholder="e.g. 100mm">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssRoof2CentreSpacings">Centre spacings:</label>
+                        <input type="text" id="ssRoof2CentreSpacings" name="ssRoof2CentreSpacings" placeholder="e.g. 400mm">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssRoof2GutterHeight">Gutter height:</label>
+                        <input type="text" id="ssRoof2GutterHeight" name="ssRoof2GutterHeight" placeholder="e.g. 4m">
+                    </div>
+                    <div class="form-group">
+                        <label>Is roof under warranty:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssRoof2UnderWarranty" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssRoof2UnderWarranty" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssRoof2UnderWarranty" name="ssRoof2UnderWarranty" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Shading Present:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssRoof2ShadingPresent" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssRoof2ShadingPresent" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssRoof2ShadingPresent" name="ssRoof2ShadingPresent" value="">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Electrical Section -->
+            <section id="ss-electrical" class="form-section">
+                <h2>Electrical</h2>
+                <p class="section-hint">Floor plan(s) to be completed</p>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssFuseboardLocation">Fuseboard Location:</label>
+                        <input type="text" id="ssFuseboardLocation" name="ssFuseboardLocation" placeholder="Location">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssMeterLocation">Meter Location:</label>
+                        <input type="text" id="ssMeterLocation" name="ssMeterLocation" placeholder="Location">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssElectricalCondition">Condition of Electrical installation:</label>
+                        <input type="text" id="ssElectricalCondition" name="ssElectricalCondition" placeholder="Condition">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssNumberOfPhases">Number of Phases:</label>
+                        <input type="number" id="ssNumberOfPhases" name="ssNumberOfPhases" placeholder="1 or 3" inputmode="numeric">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssMainFuseSize">Main Fuse Size:</label>
+                        <input type="text" id="ssMainFuseSize" name="ssMainFuseSize" placeholder="e.g. 100A">
+                    </div>
+                    <div class="form-group">
+                        <label>Earthing System:</label>
+                        <div class="quick-options" data-target="ssEarthingSystem">
+                            <button type="button" class="quick-btn">TN-S</button>
+                            <button type="button" class="quick-btn">TN-C-S</button>
+                            <button type="button" class="quick-btn">TT</button>
+                        </div>
+                        <input type="text" id="ssEarthingSystem" name="ssEarthingSystem" placeholder="Or specify">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssMaximumDemand">Maximum Demand:</label>
+                        <input type="text" id="ssMaximumDemand" name="ssMaximumDemand" placeholder="Maximum demand">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Looped Supply:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssLoopedSupply" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssLoopedSupply" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssLoopedSupply" name="ssLoopedSupply" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssLoopImpedance">L-N Loop impedance:</label>
+                        <input type="text" id="ssLoopImpedance" name="ssLoopImpedance" placeholder="Impedance">
+                    </div>
+                </div>
+
+                <div class="form-note important">
+                    <strong>MUST BE PHOTOGRAPHED</strong>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Space for new CU:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssSpaceForNewCU" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssSpaceForNewCU" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssSpaceForNewCU" name="ssSpaceForNewCU" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Underfloor Access:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssUnderfloorAccess" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssUnderfloorAccess" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssUnderfloorAccess" name="ssUnderfloorAccess" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Cable route:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssCableRoute" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssCableRoute" data-value="N">No</button>
+                            <button type="button" class="btn-choice" data-field="ssCableRoute" data-value="See Plan">See Plan</button>
+                        </div>
+                        <input type="hidden" id="ssCableRoute" name="ssCableRoute" value="">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Floor Coverings:</label>
+                    <div class="quick-options" data-target="ssFloorCoverings">
+                        <button type="button" class="quick-btn">Laminate</button>
+                        <button type="button" class="quick-btn">Carpet</button>
+                        <button type="button" class="quick-btn">Tile</button>
+                        <button type="button" class="quick-btn">Wood</button>
+                    </div>
+                    <input type="text" id="ssFloorCoverings" name="ssFloorCoverings" placeholder="Or specify other">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssInverterLocation">Inverter Location:</label>
+                        <input type="text" id="ssInverterLocation" name="ssInverterLocation" placeholder="Location">
+                    </div>
+                    <div class="form-group">
+                        <label>Interior/Exterior:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssInverterInteriorExterior" data-value="Interior">Interior</button>
+                            <button type="button" class="btn-choice" data-field="ssInverterInteriorExterior" data-value="Exterior">Exterior</button>
+                        </div>
+                        <input type="hidden" id="ssInverterInteriorExterior" name="ssInverterInteriorExterior" value="">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>WiFi Available:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssWifiAvailable" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssWifiAvailable" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssWifiAvailable" name="ssWifiAvailable" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssMountingSurface">Mounting Surface:</label>
+                        <input type="text" id="ssMountingSurface" name="ssMountingSurface" placeholder="Surface type">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Loft Floored:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssLoftFloored" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssLoftFloored" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssLoftFloored" name="ssLoftFloored" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Loft Light:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssLoftLight" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssLoftLight" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssLoftLight" name="ssLoftLight" value="">
+                    </div>
+                    <div class="form-group">
+                        <label>Loft Ladder:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssLoftLadder" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssLoftLadder" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssLoftLadder" name="ssLoftLadder" value="">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Water Heating method:</label>
+                    <div class="quick-options" data-target="ssWaterHeating">
+                        <button type="button" class="quick-btn">Immersion</button>
+                        <button type="button" class="quick-btn">Gas</button>
+                        <button type="button" class="quick-btn">Oil</button>
+                        <button type="button" class="quick-btn">Heat pump</button>
+                    </div>
+                    <input type="text" id="ssWaterHeating" name="ssWaterHeating" placeholder="Or specify other">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Interlinked Smoke Alarms:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssSmokeAlarms" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="ssSmokeAlarms" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="ssSmokeAlarms" name="ssSmokeAlarms" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="ssSmokeAlarmBrand">Brand:</label>
+                        <input type="text" id="ssSmokeAlarmBrand" name="ssSmokeAlarmBrand" placeholder="Brand name">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ssSmokeAlarmType">Type:</label>
+                        <input type="text" id="ssSmokeAlarmType" name="ssSmokeAlarmType" placeholder="Type">
+                    </div>
+                    <div class="form-group">
+                        <label>Hardwired / Wireless:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="ssSmokeAlarmWired" data-value="Hardwired">Hardwired</button>
+                            <button type="button" class="btn-choice" data-field="ssSmokeAlarmWired" data-value="Wireless">Wireless</button>
+                        </div>
+                        <input type="hidden" id="ssSmokeAlarmWired" name="ssSmokeAlarmWired" value="">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Notes & Plans Section -->
+            <section id="ss-notes" class="form-section">
+                <h2>Notes & Plans</h2>
+
+                <div class="form-note">
+                    <strong>Note:</strong> For metal box profile or corrugated roofs please note the distance between peaks, height of peaks and width of peaks.
+                </div>
+
+                <div class="form-group">
+                    <label for="ssSurveyNotes">Notes:</label>
+                    <textarea id="ssSurveyNotes" name="ssSurveyNotes" rows="6" placeholder="Additional notes..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Floorplan:</label>
+                    <input type="file" id="ssFloorplan" name="ssFloorplan" accept="image/*,application/pdf">
+                    <div class="file-preview" id="ssFloorplanPreview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Roof plan:</label>
+                    <input type="file" id="ssRoofPlan" name="ssRoofPlan" accept="image/*,application/pdf">
+                    <div class="file-preview" id="ssRoofPlanPreview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Site Photos:</label>
+                    <input type="file" id="ssSitePhotos" name="ssSitePhotos" accept="image/*" multiple>
+                    <div class="file-preview" id="ssSitePhotosPreview"></div>
+                </div>
+            </section>
+
+            <!-- Site Survey Action Buttons -->
+            <div class="form-actions">
+                <button type="button" class="action-menu-toggle" id="ssActionMenuToggle">
+                    <span class="burger-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                    Actions
+                </button>
+                <div class="action-buttons-wrapper" id="ssActionButtonsWrapper">
+                    <button type="button" class="btn-primary" id="ssExportPdfBtn">Export to PDF</button>
+                    <button type="button" class="btn-secondary" id="ssExportCsvBtn">Export to CSV</button>
+                    <button type="button" class="btn-draft" id="ssSaveDraftBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+                        </svg>
+                        Save Draft
+                    </button>
+                    <button type="button" class="btn-draft" id="ssLoadDraftBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                        </svg>
+                        Load Draft
+                    </button>
+                    <button type="button" class="btn-secondary" id="ssClearBtn">Clear Form</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Job Completed Form (Hidden by default) -->
+    <div class="container" id="jobCompletedContainer" style="display: none;">
+        <header class="header">
+            <div class="header-brand">
+                <h1>Job Completed Sheet</h1>
+                <div class="header-trust-badges">
+                    <img src="public/Untitled design (17).png" alt="Viking Tools" class="header-logo-main">
+                    <img src="public/Untitled design (19).png" alt="Octopus Trusted Partner" class="header-logo-main">
+                    <img src="public/Untitled design (21).png" alt="MCS Certified" class="header-logo-badge">
+                </div>
+            </div>
+        </header>
+
+        <form id="jobCompletedForm">
+            <!-- Job Completed Navigation Menu -->
+            <nav class="nav-menu jc-nav" id="jcNavMenu">
+                <button type="button" class="nav-toggle" id="jcNavToggle">☰ Sections</button>
+                <div class="nav-items" id="jcNavItems">
+                    <a href="#jc-customer" class="nav-item">Customer Details</a>
+                    <a href="#jc-installation" class="nav-item">Installation</a>
+                    <a href="#jc-strings" class="nav-item">Strings</a>
+                    <a href="#jc-commission" class="nav-item">Commission</a>
+                    <a href="#jc-feedback" class="nav-item">Feedback</a>
+                    <a href="#jc-signatures" class="nav-item">Signatures</a>
+                </div>
+            </nav>
+
+            <!-- Customer Details Section -->
+            <section id="jc-customer" class="form-section">
+                <h2>Customer Details</h2>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="jcCustomerName">Customer Name:</label>
+                        <input type="text" id="jcCustomerName" name="jcCustomerName" placeholder="Customer name">
+                    </div>
+                    <div class="form-group">
+                        <label for="jcJobRef">Job Ref:</label>
+                        <input type="text" id="jcJobRef" name="jcJobRef" placeholder="Job reference">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="jcAddress">Address:</label>
+                    <input type="text" id="jcAddress" name="jcAddress" placeholder="Full address">
+                </div>
+
+                <div class="form-group">
+                    <label for="jcPostCode">Post Code:</label>
+                    <input type="text" id="jcPostCode" name="jcPostCode" placeholder="Post code">
+                </div>
+            </section>
+
+            <!-- Installation Details Section -->
+            <section id="jc-installation" class="form-section">
+                <h2>Installation Details</h2>
+
+                <div class="form-group">
+                    <label for="jcInverterBatteryLocation">Inverter & Battery Location:</label>
+                    <div class="quick-options" data-target="jcInverterBatteryLocation">
+                        <button type="button" class="quick-btn">Garage</button>
+                        <button type="button" class="quick-btn">Loft</button>
+                        <button type="button" class="quick-btn">Utility</button>
+                        <button type="button" class="quick-btn">Hall</button>
+                    </div>
+                    <input type="text" id="jcInverterBatteryLocation" name="jcInverterBatteryLocation" placeholder="Or specify location">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="jcInverter">Inverter:</label>
+                        <div class="quick-options" data-target="jcInverter">
+                            <button type="button" class="quick-btn">GivEnergy</button>
+                            <button type="button" class="quick-btn">FoxESS</button>
+                            <button type="button" class="quick-btn">Solis</button>
+                        </div>
+                        <input type="text" id="jcInverter" name="jcInverter" placeholder="Model/spec">
+                    </div>
+                    <div class="form-group">
+                        <label for="jcBattery">Battery:</label>
+                        <div class="quick-options" data-target="jcBattery">
+                            <button type="button" class="quick-btn">GivEnergy</button>
+                            <button type="button" class="quick-btn">FoxESS</button>
+                            <button type="button" class="quick-btn">Ecoflow</button>
+                        </div>
+                        <input type="text" id="jcBattery" name="jcBattery" placeholder="Model/spec">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="jcPanels">Panels:</label>
+                        <input type="text" id="jcPanels" name="jcPanels" placeholder="Panel type/model">
+                    </div>
+                    <div class="form-group">
+                        <label for="jcTigoQuantity">Tigo Quantity:</label>
+                        <input type="number" id="jcTigoQuantity" name="jcTigoQuantity" placeholder="Number of Tigos" inputmode="numeric">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>WiFi Extender:</label>
+                    <div class="button-group">
+                        <button type="button" class="btn-choice" data-field="jcWifiExtender" data-value="Y">Yes</button>
+                        <button type="button" class="btn-choice" data-field="jcWifiExtender" data-value="N">No</button>
+                    </div>
+                    <input type="hidden" id="jcWifiExtender" name="jcWifiExtender" value="">
+                </div>
+            </section>
+
+            <!-- Strings Section -->
+            <section id="jc-strings" class="form-section">
+                <h2>String Configuration</h2>
+
+                <div class="inhome-group">
+                    <h3>String 1</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="jcString1Panels">Panels:</label>
+                            <input type="number" id="jcString1Panels" name="jcString1Panels" placeholder="Number" inputmode="numeric">
+                        </div>
+                        <div class="form-group">
+                            <label for="jcString1Orientation">Orientation:</label>
+                            <div class="quick-options" data-target="jcString1Orientation">
+                                <button type="button" class="quick-btn">N</button>
+                                <button type="button" class="quick-btn">S</button>
+                                <button type="button" class="quick-btn">E</button>
+                                <button type="button" class="quick-btn">W</button>
+                                <button type="button" class="quick-btn">SE</button>
+                                <button type="button" class="quick-btn">SW</button>
+                            </div>
+                            <input type="text" id="jcString1Orientation" name="jcString1Orientation" placeholder="Or specify">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="jcString1Inclination">Inclination:</label>
+                        <div class="quick-options" data-target="jcString1Inclination">
+                            <button type="button" class="quick-btn">15°</button>
+                            <button type="button" class="quick-btn">30°</button>
+                            <button type="button" class="quick-btn">35°</button>
+                            <button type="button" class="quick-btn">40°</button>
+                            <button type="button" class="quick-btn">45°</button>
+                        </div>
+                        <input type="text" id="jcString1Inclination" name="jcString1Inclination" placeholder="Or specify">
+                    </div>
+                </div>
+
+                <div class="inhome-group">
+                    <h3>String 2</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="jcString2Panels">Panels:</label>
+                            <input type="number" id="jcString2Panels" name="jcString2Panels" placeholder="Number" inputmode="numeric">
+                        </div>
+                        <div class="form-group">
+                            <label for="jcString2Orientation">Orientation:</label>
+                            <div class="quick-options" data-target="jcString2Orientation">
+                                <button type="button" class="quick-btn">N</button>
+                                <button type="button" class="quick-btn">S</button>
+                                <button type="button" class="quick-btn">E</button>
+                                <button type="button" class="quick-btn">W</button>
+                                <button type="button" class="quick-btn">SE</button>
+                                <button type="button" class="quick-btn">SW</button>
+                            </div>
+                            <input type="text" id="jcString2Orientation" name="jcString2Orientation" placeholder="Or specify">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="jcString2Inclination">Inclination:</label>
+                        <div class="quick-options" data-target="jcString2Inclination">
+                            <button type="button" class="quick-btn">15°</button>
+                            <button type="button" class="quick-btn">30°</button>
+                            <button type="button" class="quick-btn">35°</button>
+                            <button type="button" class="quick-btn">40°</button>
+                            <button type="button" class="quick-btn">45°</button>
+                        </div>
+                        <input type="text" id="jcString2Inclination" name="jcString2Inclination" placeholder="Or specify">
+                    </div>
+                </div>
+
+                <div class="inhome-group">
+                    <h3>Smoke Alarms</h3>
+                    <div class="form-group">
+                        <label>Smoke Alarm(s) Fitted:</label>
+                        <div class="button-group">
+                            <button type="button" class="btn-choice" data-field="jcSmokeAlarmsFitted" data-value="Y">Yes</button>
+                            <button type="button" class="btn-choice" data-field="jcSmokeAlarmsFitted" data-value="N">No</button>
+                        </div>
+                        <input type="hidden" id="jcSmokeAlarmsFitted" name="jcSmokeAlarmsFitted" value="">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="jcSmokeAlarmType">Type:</label>
+                            <input type="text" id="jcSmokeAlarmType" name="jcSmokeAlarmType" placeholder="Alarm type">
+                        </div>
+                        <div class="form-group">
+                            <label for="jcSmokeAlarmNumber">Number:</label>
+                            <input type="number" id="jcSmokeAlarmNumber" name="jcSmokeAlarmNumber" placeholder="Quantity" inputmode="numeric">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Commission Section -->
+            <section id="jc-commission" class="form-section">
+                <h2>Commission</h2>
+
+                <div class="form-group">
+                    <label>Site Commissioned:</label>
+                    <div class="button-group">
+                        <button type="button" class="btn-choice" data-field="jcSiteCommissioned" data-value="Y">Yes</button>
+                        <button type="button" class="btn-choice" data-field="jcSiteCommissioned" data-value="N">No</button>
+                    </div>
+                    <input type="hidden" id="jcSiteCommissioned" name="jcSiteCommissioned" value="">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="jcUsername">Username:</label>
+                        <input type="text" id="jcUsername" name="jcUsername" placeholder="System username">
+                    </div>
+                    <div class="form-group">
+                        <label for="jcPassword">Password:</label>
+                        <input type="text" id="jcPassword" name="jcPassword" placeholder="System password">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Accounts Set Up For Customer:</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="jcAccountGivEnergy" value="GivEnergy">
+                            <span>GivEnergy</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="jcAccountFoxESS" value="FoxESS">
+                            <span>FoxESS</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="jcAccountEcoflow" value="Ecoflow">
+                            <span>Ecoflow</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="jcAccountTigo" value="Tigo">
+                            <span>Tigo</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="jcAccountOther" value="Other">
+                            <span>Other</span>
+                        </label>
+                    </div>
+                    <input type="text" id="jcAccountOtherSpec" name="jcAccountOtherSpec" placeholder="If other, please specify" style="margin-top: 0.5rem;">
+                </div>
+
+                <div class="form-group">
+                    <label for="jcInstallers">Installers:</label>
+                    <input type="text" id="jcInstallers" name="jcInstallers" placeholder="Installer names">
+                </div>
+            </section>
+
+            <!-- Feedback Section -->
+            <section id="jc-feedback" class="form-section">
+                <h2>Customer Feedback</h2>
+
+                <div class="form-group">
+                    <label for="jcCustomerFeedback">Customer Feedback:</label>
+                    <textarea id="jcCustomerFeedback" name="jcCustomerFeedback" rows="5" placeholder="Customer comments and feedback..."></textarea>
+                </div>
+            </section>
+
+            <!-- Signatures Section -->
+            <section id="jc-signatures" class="form-section">
+                <h2>Signatures</h2>
+
+                <div class="form-group">
+                    <label>Customer Signature</label>
+                    <div class="signature-pad-container">
+                        <canvas id="jcCustomerSignature" class="signature-pad" width="300" height="150"></canvas>
+                        <button type="button" class="btn-secondary signature-clear" data-target="jcCustomerSignature">Clear</button>
+                    </div>
+                    <input type="hidden" id="jcCustomerSignatureData" name="jcCustomerSignatureData" value="">
+                    <div class="form-group" style="margin-top: 0.5rem;">
+                        <label for="jcCustomerSignatureDate">Date:</label>
+                        <input type="date" id="jcCustomerSignatureDate" name="jcCustomerSignatureDate">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Installer Signature</label>
+                    <div class="signature-pad-container">
+                        <canvas id="jcInstallerSignature" class="signature-pad" width="300" height="150"></canvas>
+                        <button type="button" class="btn-secondary signature-clear" data-target="jcInstallerSignature">Clear</button>
+                    </div>
+                    <input type="hidden" id="jcInstallerSignatureData" name="jcInstallerSignatureData" value="">
+                    <div class="form-group" style="margin-top: 0.5rem;">
+                        <label for="jcInstallerSignatureDate">Date:</label>
+                        <input type="date" id="jcInstallerSignatureDate" name="jcInstallerSignatureDate">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Job Completed Action Buttons -->
+            <div class="form-actions">
+                <button type="button" class="action-menu-toggle" id="jcActionMenuToggle">
+                    <span class="burger-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                    Actions
+                </button>
+                <div class="action-buttons-wrapper" id="jcActionButtonsWrapper">
+                    <button type="button" class="btn-primary" id="jcExportPdfBtn">Export to PDF</button>
+                    <button type="button" class="btn-secondary" id="jcExportCsvBtn">Export to CSV</button>
+                    <button type="button" class="btn-draft" id="jcSaveDraftBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+                        </svg>
+                        Save Draft
+                    </button>
+                    <button type="button" class="btn-draft" id="jcLoadDraftBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/>
+                        </svg>
+                        Load Draft
+                    </button>
+                    <button type="button" class="btn-secondary" id="jcClearBtn">Clear Form</button>
                 </div>
             </div>
         </form>

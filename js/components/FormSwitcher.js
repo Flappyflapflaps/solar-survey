@@ -1,21 +1,31 @@
-// Form Switcher - Handles switching between Solar Survey and ASHP forms
+// Form Switcher - Handles switching between Solar Survey, Site Survey, ASHP and Custom forms
 
 import { initializeButtonGroups } from './ButtonGroup.js';
 import { debounce } from '../utils/debounce.js';
 
 const ASHP_STORAGE_KEY = 'ashpPostInspection';
+const SITE_SURVEY_STORAGE_KEY = 'siteSurveyData';
+const JOB_COMPLETED_STORAGE_KEY = 'jobCompletedData';
 
 class FormSwitcher {
     constructor() {
         this.currentForm = 'solar';
         this.solarForm = null;
         this.ashpForm = null;
+        this.siteSurveyForm = null;
+        this.jobCompletedForm = null;
+        this.jobCompletedContainer = null;
         this.customFormsContainer = null;
         this.mainContainer = null;
         this.formSelector = null;
+        this.formDropdown = null;
         this.ashpButtonGroups = [];
+        this.siteSurveyButtonGroups = [];
+        this.jobCompletedButtonGroups = [];
         this.signaturePads = {};
         this.autoSaveDebounced = null;
+        this.siteSurveyAutoSaveDebounced = null;
+        this.jobCompletedAutoSaveDebounced = null;
     }
 
     init() {
@@ -24,15 +34,19 @@ class FormSwitcher {
 
             this.solarForm = document.getElementById('surveyForm');
             this.ashpForm = document.getElementById('ashpForm');
+            this.siteSurveyForm = document.getElementById('siteSurveyForm');
             this.customFormsContainer = document.getElementById('customFormsContainer');
             this.mainContainer = document.getElementById('mainSurveyContainer');
             this.formSelector = document.getElementById('formTypeSelector');
+            this.formDropdown = document.getElementById('formTypeDropdown');
 
             console.log('FormSwitcher: Elements found:', {
                 solarForm: !!this.solarForm,
                 ashpForm: !!this.ashpForm,
+                siteSurveyForm: !!this.siteSurveyForm,
                 customFormsContainer: !!this.customFormsContainer,
-                formSelector: !!this.formSelector
+                formSelector: !!this.formSelector,
+                formDropdown: !!this.formDropdown
             });
 
             if (!this.formSelector) {
@@ -42,7 +56,9 @@ class FormSwitcher {
 
             this.setupEventListeners();
             this.initializeASHPForm();
+            this.initializeSiteSurveyForm();
             this.loadASHPData();
+            this.loadSiteSurveyData();
             console.log('FormSwitcher: Initialization complete');
         } catch (error) {
             console.error('FormSwitcher: Initialization error:', error);
@@ -50,19 +66,15 @@ class FormSwitcher {
     }
 
     setupEventListeners() {
-        // Form type selector buttons
-        const buttons = this.formSelector.querySelectorAll('.form-type-btn');
-        console.log('FormSwitcher: Found', buttons.length, 'form type buttons');
-
-        buttons.forEach(btn => {
-            console.log('FormSwitcher: Adding click listener to button for form:', btn.dataset.form);
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const formType = btn.dataset.form;
-                console.log('FormSwitcher: Button clicked for form:', formType);
+        // Form type dropdown selector
+        if (this.formDropdown) {
+            console.log('FormSwitcher: Setting up dropdown listener');
+            this.formDropdown.addEventListener('change', (e) => {
+                const formType = e.target.value;
+                console.log('FormSwitcher: Dropdown changed to:', formType);
                 this.switchForm(formType);
             });
-        });
+        }
 
         // ASHP nav toggle
         const ashpNavToggle = document.getElementById('ashpNavToggle');
@@ -73,12 +85,30 @@ class FormSwitcher {
             });
         }
 
+        // Site Survey nav toggle
+        const ssNavToggle = document.getElementById('siteSurveyNavToggle');
+        const ssNavItems = document.getElementById('siteSurveyNavItems');
+        if (ssNavToggle && ssNavItems) {
+            ssNavToggle.addEventListener('click', () => {
+                ssNavItems.classList.toggle('active');
+            });
+        }
+
         // ASHP action menu toggle
         const ashpActionToggle = document.getElementById('ashpActionMenuToggle');
         const ashpActionWrapper = document.getElementById('ashpActionButtonsWrapper');
         if (ashpActionToggle && ashpActionWrapper) {
             ashpActionToggle.addEventListener('click', () => {
                 ashpActionWrapper.classList.toggle('active');
+            });
+        }
+
+        // Site Survey action menu toggle
+        const ssActionToggle = document.getElementById('ssActionMenuToggle');
+        const ssActionWrapper = document.getElementById('ssActionButtonsWrapper');
+        if (ssActionToggle && ssActionWrapper) {
+            ssActionToggle.addEventListener('click', () => {
+                ssActionWrapper.classList.toggle('active');
             });
         }
 
@@ -103,7 +133,33 @@ class FormSwitcher {
             ashpExportPdfBtn.addEventListener('click', () => this.exportASHPToPDF());
         }
 
-        // Defect Free conditional field
+        // Site Survey action buttons
+        const ssClearBtn = document.getElementById('ssClearBtn');
+        if (ssClearBtn) {
+            ssClearBtn.addEventListener('click', () => this.clearSiteSurveyForm());
+        }
+
+        const ssSaveDraftBtn = document.getElementById('ssSaveDraftBtn');
+        if (ssSaveDraftBtn) {
+            ssSaveDraftBtn.addEventListener('click', () => this.saveSiteSurveyDraft());
+        }
+
+        const ssLoadDraftBtn = document.getElementById('ssLoadDraftBtn');
+        if (ssLoadDraftBtn) {
+            ssLoadDraftBtn.addEventListener('click', () => this.loadSiteSurveyDrafts());
+        }
+
+        const ssExportPdfBtn = document.getElementById('ssExportPdfBtn');
+        if (ssExportPdfBtn) {
+            ssExportPdfBtn.addEventListener('click', () => this.exportSiteSurveyToPDF());
+        }
+
+        const ssExportCsvBtn = document.getElementById('ssExportCsvBtn');
+        if (ssExportCsvBtn) {
+            ssExportCsvBtn.addEventListener('click', () => this.exportSiteSurveyToCSV());
+        }
+
+        // Defect Free conditional field (ASHP)
         const defectFreeField = document.getElementById('ashpDefectFree');
         if (defectFreeField) {
             // Watch for changes via MutationObserver since it's a hidden input
@@ -114,6 +170,35 @@ class FormSwitcher {
                 }
             });
             observer.observe(defectFreeField, { attributes: true, attributeFilter: ['value'] });
+        }
+
+        // Site Survey conditional fields
+        this.setupSiteSurveyConditionalFields();
+    }
+
+    setupSiteSurveyConditionalFields() {
+        // Parking Available conditional
+        const parkingField = document.getElementById('ssParkingAvailable');
+        if (parkingField) {
+            const observer = new MutationObserver(() => {
+                const specGroup = document.getElementById('ssParkingSpecGroup');
+                if (specGroup) {
+                    specGroup.style.display = parkingField.value === 'N' ? 'block' : 'none';
+                }
+            });
+            observer.observe(parkingField, { attributes: true, attributeFilter: ['value'] });
+        }
+
+        // Nests conditional
+        const nestsField = document.getElementById('ssNests');
+        if (nestsField) {
+            const observer = new MutationObserver(() => {
+                const specGroup = document.getElementById('ssNestSpecGroup');
+                if (specGroup) {
+                    specGroup.style.display = nestsField.value === 'Y' ? 'block' : 'none';
+                }
+            });
+            observer.observe(nestsField, { attributes: true, attributeFilter: ['value'] });
         }
     }
 
@@ -255,17 +340,17 @@ class FormSwitcher {
 
         this.currentForm = formType;
 
-        // Update button states
-        const buttons = this.formSelector.querySelectorAll('.form-type-btn');
-        buttons.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.form === formType);
-        });
+        // Update dropdown value
+        if (this.formDropdown) {
+            this.formDropdown.value = formType;
+        }
 
         // Update title
         const titleEl = document.getElementById('formTitle');
 
         // Show/hide forms and navigation
         const solarNav = document.getElementById('navMenu');
+        const siteSurveyNav = document.getElementById('siteSurveyNavMenu');
         const header = document.querySelector('.header');
 
         if (formType === 'solar') {
@@ -273,16 +358,30 @@ class FormSwitcher {
             if (this.mainContainer) this.mainContainer.style.display = 'block';
             if (this.solarForm) this.solarForm.style.display = 'block';
             if (this.ashpForm) this.ashpForm.style.display = 'none';
+            if (this.siteSurveyForm) this.siteSurveyForm.style.display = 'none';
             if (this.customFormsContainer) this.customFormsContainer.style.display = 'none';
             if (solarNav) solarNav.style.display = 'block';
+            if (siteSurveyNav) siteSurveyNav.style.display = 'none';
+            if (header) header.style.display = 'block';
+        } else if (formType === 'siteSurvey') {
+            if (titleEl) titleEl.textContent = 'Customer Site Survey (Solar)';
+            if (this.mainContainer) this.mainContainer.style.display = 'block';
+            if (this.solarForm) this.solarForm.style.display = 'none';
+            if (this.ashpForm) this.ashpForm.style.display = 'none';
+            if (this.siteSurveyForm) this.siteSurveyForm.style.display = 'block';
+            if (this.customFormsContainer) this.customFormsContainer.style.display = 'none';
+            if (solarNav) solarNav.style.display = 'none';
+            if (siteSurveyNav) siteSurveyNav.style.display = 'block';
             if (header) header.style.display = 'block';
         } else if (formType === 'ashp') {
             if (titleEl) titleEl.textContent = 'ASHP Post Inspection';
             if (this.mainContainer) this.mainContainer.style.display = 'block';
             if (this.solarForm) this.solarForm.style.display = 'none';
             if (this.ashpForm) this.ashpForm.style.display = 'block';
+            if (this.siteSurveyForm) this.siteSurveyForm.style.display = 'none';
             if (this.customFormsContainer) this.customFormsContainer.style.display = 'none';
             if (solarNav) solarNav.style.display = 'none';
+            if (siteSurveyNav) siteSurveyNav.style.display = 'none';
             if (header) header.style.display = 'block';
         } else if (formType === 'custom') {
             if (this.mainContainer) this.mainContainer.style.display = 'none';
@@ -292,6 +391,7 @@ class FormSwitcher {
         console.log('FormSwitcher: Switch complete, forms displayed:', {
             solarForm: this.solarForm?.style.display,
             ashpForm: this.ashpForm?.style.display,
+            siteSurveyForm: this.siteSurveyForm?.style.display,
             customForms: this.customFormsContainer?.style.display
         });
 
@@ -583,6 +683,383 @@ class FormSwitcher {
             indicator.classList.add('show');
             setTimeout(() => indicator.classList.remove('show'), 2000);
         }
+    }
+
+    // ==================== SITE SURVEY METHODS ====================
+
+    initializeSiteSurveyForm() {
+        if (!this.siteSurveyForm) {
+            console.log('FormSwitcher: Site Survey form not found, skipping initialization');
+            return;
+        }
+
+        try {
+            // Initialize button groups for Site Survey form
+            console.log('FormSwitcher: Initializing Site Survey button groups...');
+            this.siteSurveyButtonGroups = initializeButtonGroups(this.siteSurveyForm, () => {
+                this.autoSaveSiteSurvey();
+            });
+            console.log('FormSwitcher: Site Survey button groups initialized');
+
+            // Initialize quick options for Site Survey form
+            this.initializeSiteSurveyQuickOptions();
+
+            // Populate surveyor dropdown (same as main form)
+            this.populateSiteSurveySurveyorDropdown();
+
+        } catch (error) {
+            console.error('FormSwitcher: Error initializing Site Survey button groups:', error);
+        }
+
+        // Auto-save on input
+        this.siteSurveyAutoSaveDebounced = debounce(() => this.autoSaveSiteSurvey(), 2000);
+        this.siteSurveyForm.addEventListener('input', this.siteSurveyAutoSaveDebounced);
+        this.siteSurveyForm.addEventListener('change', this.siteSurveyAutoSaveDebounced);
+    }
+
+    initializeSiteSurveyQuickOptions() {
+        // Quick options for Site Survey form
+        const quickOptionsContainers = this.siteSurveyForm.querySelectorAll('.quick-options');
+        quickOptionsContainers.forEach(container => {
+            const targetId = container.dataset.target;
+            const targetInput = document.getElementById(targetId);
+            if (!targetInput) return;
+
+            container.querySelectorAll('.quick-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    targetInput.value = btn.textContent.trim();
+                    targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+                });
+            });
+        });
+    }
+
+    populateSiteSurveySurveyorDropdown() {
+        const select = document.getElementById('ssCarriedOutBy');
+        if (!select) return;
+
+        // Get surveyors from config (import if needed, or use same logic as main form)
+        // For now, we'll copy the surveyors from the main form's dropdown
+        const mainSelect = document.getElementById('carriedOutBy');
+        if (mainSelect) {
+            Array.from(mainSelect.options).forEach(opt => {
+                if (opt.value) {
+                    const option = document.createElement('option');
+                    option.value = opt.value;
+                    option.textContent = opt.textContent;
+                    select.appendChild(option);
+                }
+            });
+        }
+    }
+
+    collectSiteSurveyData() {
+        if (!this.siteSurveyForm) return {};
+
+        const formData = new FormData(this.siteSurveyForm);
+        const data = {};
+
+        for (const [key, value] of formData.entries()) {
+            data[key] = value;
+        }
+
+        // Get hidden input values (button groups)
+        this.siteSurveyForm.querySelectorAll('input[type="hidden"]').forEach(input => {
+            if (input.name && input.value) {
+                data[input.name] = input.value;
+            }
+        });
+
+        return data;
+    }
+
+    autoSaveSiteSurvey() {
+        const data = this.collectSiteSurveyData();
+        localStorage.setItem(SITE_SURVEY_STORAGE_KEY, JSON.stringify(data));
+        this.showSaveIndicator();
+    }
+
+    loadSiteSurveyData() {
+        const savedData = localStorage.getItem(SITE_SURVEY_STORAGE_KEY);
+        if (!savedData) return;
+
+        try {
+            const data = JSON.parse(savedData);
+            this.populateSiteSurveyForm(data);
+        } catch (e) {
+            console.error('Error loading Site Survey data:', e);
+        }
+    }
+
+    populateSiteSurveyForm(data) {
+        if (!this.siteSurveyForm || !data) return;
+
+        Object.entries(data).forEach(([key, value]) => {
+            const element = this.siteSurveyForm.querySelector(`[name="${key}"]`);
+            if (!element) return;
+
+            if (element.type === 'hidden') {
+                element.value = value;
+                // Update button group visual state
+                const buttons = this.siteSurveyForm.querySelectorAll(`[data-field="${key}"]`);
+                buttons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.value === value);
+                });
+            } else if (element.tagName === 'SELECT') {
+                element.value = value;
+            } else if (element.tagName === 'TEXTAREA') {
+                element.value = value;
+            } else {
+                element.value = value;
+            }
+        });
+
+        // Handle conditional fields
+        const parkingField = document.getElementById('ssParkingAvailable');
+        const parkingSpecGroup = document.getElementById('ssParkingSpecGroup');
+        if (parkingField && parkingSpecGroup) {
+            parkingSpecGroup.style.display = parkingField.value === 'N' ? 'block' : 'none';
+        }
+
+        const nestsField = document.getElementById('ssNests');
+        const nestsSpecGroup = document.getElementById('ssNestSpecGroup');
+        if (nestsField && nestsSpecGroup) {
+            nestsSpecGroup.style.display = nestsField.value === 'Y' ? 'block' : 'none';
+        }
+    }
+
+    clearSiteSurveyForm() {
+        if (!confirm('Are you sure you want to clear the Site Survey form? This cannot be undone.')) {
+            return;
+        }
+
+        if (this.siteSurveyForm) {
+            this.siteSurveyForm.reset();
+
+            // Clear hidden inputs
+            this.siteSurveyForm.querySelectorAll('input[type="hidden"]').forEach(input => {
+                input.value = '';
+            });
+
+            // Clear button group selections
+            this.siteSurveyForm.querySelectorAll('.btn-choice').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Clear file previews
+            const previews = ['ssFloorplanPreview', 'ssRoofPlanPreview', 'ssSitePhotosPreview'];
+            previews.forEach(id => {
+                const preview = document.getElementById(id);
+                if (preview) preview.innerHTML = '';
+            });
+        }
+
+        localStorage.removeItem(SITE_SURVEY_STORAGE_KEY);
+    }
+
+    saveSiteSurveyDraft() {
+        const name = prompt('Enter a name for this draft:');
+        if (!name) return;
+
+        const data = this.collectSiteSurveyData();
+        const drafts = this.getSiteSurveyDrafts();
+
+        const draft = {
+            id: Date.now().toString(),
+            name,
+            data,
+            createdAt: new Date().toISOString()
+        };
+
+        drafts.push(draft);
+        localStorage.setItem('siteSurveyDrafts', JSON.stringify(drafts));
+        alert('Draft saved successfully!');
+    }
+
+    getSiteSurveyDrafts() {
+        const drafts = localStorage.getItem('siteSurveyDrafts');
+        return drafts ? JSON.parse(drafts) : [];
+    }
+
+    loadSiteSurveyDrafts() {
+        const drafts = this.getSiteSurveyDrafts();
+        if (drafts.length === 0) {
+            alert('No saved drafts found.');
+            return;
+        }
+
+        const draftList = drafts.map((d, i) => `${i + 1}. ${d.name} (${new Date(d.createdAt).toLocaleDateString()})`).join('\n');
+        const choice = prompt(`Select a draft to load:\n\n${draftList}\n\nEnter number:`);
+
+        if (!choice) return;
+
+        const index = parseInt(choice) - 1;
+        if (index >= 0 && index < drafts.length) {
+            this.populateSiteSurveyForm(drafts[index].data);
+            alert('Draft loaded successfully!');
+        }
+    }
+
+    async exportSiteSurveyToPDF() {
+        const data = this.collectSiteSurveyData();
+
+        // Use jsPDF if available
+        if (typeof window.jspdf === 'undefined') {
+            alert('PDF library not loaded. Please try again.');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Title
+        doc.setFontSize(18);
+        doc.text('Customer Site Survey (Solar)', 105, 20, { align: 'center' });
+
+        // Add content
+        doc.setFontSize(10);
+        let y = 35;
+
+        const addSection = (title, fields) => {
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text(title, 14, y);
+            y += 7;
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+
+            fields.forEach(([label, key]) => {
+                const value = data[key] || 'N/A';
+                doc.text(`${label}: ${value}`, 14, y);
+                y += 5;
+                if (y > 280) {
+                    doc.addPage();
+                    y = 20;
+                }
+            });
+            y += 5;
+        };
+
+        addSection('Customer Details', [
+            ['Carried out by', 'ssCarriedOutBy'],
+            ['Name', 'ssCustomerName'],
+            ['Address', 'ssAddress'],
+            ['Mobile', 'ssMobile'],
+            ['Home', 'ssHome'],
+            ['Post Code', 'ssPostCode'],
+            ['What 3 Words', 'ssWhat3Words'],
+            ['Email', 'ssEmail']
+        ]);
+
+        addSection('Property Details', [
+            ['Conservation Area', 'ssConservationArea'],
+            ['Terrain', 'ssTerrain'],
+            ['Property Exposed', 'ssPropertyExposed'],
+            ['Parking Available', 'ssParkingAvailable'],
+            ['Parking Specification', 'ssParkingSpec'],
+            ['Occupancy Type', 'ssOccupancyType'],
+            ['kWh per annum', 'ssKwhPerAnnum'],
+            ['DNO', 'ssDno']
+        ]);
+
+        addSection('Building', [
+            ['Construction', 'ssConstruction'],
+            ['Wall Thickness', 'ssWallThickness'],
+            ['Internal Walk Construction', 'ssInternalWalkConstruction'],
+            ['Building Type', 'ssBuildingType'],
+            ['Protected Species', 'ssProtectedSpecies'],
+            ['Nests', 'ssNests'],
+            ['Nest/Species Type', 'ssNestSpec']
+        ]);
+
+        addSection('Roof Aspect 1', [
+            ['Covering Type', 'ssRoof1CoveringType'],
+            ['Slope Length', 'ssRoof1SlopeLength'],
+            ['Orientation from S', 'ssRoof1OrientationFromS'],
+            ['Width at Gutter', 'ssRoof1WidthAtGutter'],
+            ['Width at Ridge', 'ssRoof1WidthAtRidge'],
+            ['Inclination', 'ssRoof1Inclination'],
+            ['Rafter Width', 'ssRoof1RafterWidth'],
+            ['Rafter Depth', 'ssRoof1RafterDepth'],
+            ['Centre Spacings', 'ssRoof1CentreSpacings'],
+            ['Gutter Height', 'ssRoof1GutterHeight'],
+            ['Under Warranty', 'ssRoof1UnderWarranty'],
+            ['Shading Present', 'ssRoof1ShadingPresent']
+        ]);
+
+        addSection('Roof Aspect 2', [
+            ['Covering Type', 'ssRoof2CoveringType'],
+            ['Slope Length', 'ssRoof2SlopeLength'],
+            ['Orientation from S', 'ssRoof2OrientationFromS'],
+            ['Width at Gutter', 'ssRoof2WidthAtGutter'],
+            ['Width at Ridge', 'ssRoof2WidthAtRidge'],
+            ['Inclination', 'ssRoof2Inclination'],
+            ['Rafter Width', 'ssRoof2RafterWidth'],
+            ['Rafter Depth', 'ssRoof2RafterDepth'],
+            ['Centre Spacings', 'ssRoof2CentreSpacings'],
+            ['Gutter Height', 'ssRoof2GutterHeight'],
+            ['Under Warranty', 'ssRoof2UnderWarranty'],
+            ['Shading Present', 'ssRoof2ShadingPresent']
+        ]);
+
+        addSection('Electrical', [
+            ['Fuseboard Location', 'ssFuseboardLocation'],
+            ['Meter Location', 'ssMeterLocation'],
+            ['Electrical Condition', 'ssElectricalCondition'],
+            ['Number of Phases', 'ssNumberOfPhases'],
+            ['Main Fuse Size', 'ssMainFuseSize'],
+            ['Earthing System', 'ssEarthingSystem'],
+            ['Maximum Demand', 'ssMaximumDemand'],
+            ['Looped Supply', 'ssLoopedSupply'],
+            ['L-N Loop Impedance', 'ssLoopImpedance'],
+            ['Space for new CU', 'ssSpaceForNewCU'],
+            ['Underfloor Access', 'ssUnderfloorAccess'],
+            ['Cable Route', 'ssCableRoute'],
+            ['Floor Coverings', 'ssFloorCoverings'],
+            ['Inverter Location', 'ssInverterLocation'],
+            ['Interior/Exterior', 'ssInverterInteriorExterior'],
+            ['WiFi Available', 'ssWifiAvailable'],
+            ['Mounting Surface', 'ssMountingSurface'],
+            ['Loft Floored', 'ssLoftFloored'],
+            ['Loft Light', 'ssLoftLight'],
+            ['Loft Ladder', 'ssLoftLadder'],
+            ['Water Heating', 'ssWaterHeating'],
+            ['Smoke Alarms', 'ssSmokeAlarms'],
+            ['Smoke Alarm Brand', 'ssSmokeAlarmBrand'],
+            ['Smoke Alarm Type', 'ssSmokeAlarmType'],
+            ['Hardwired/Wireless', 'ssSmokeAlarmWired']
+        ]);
+
+        addSection('Notes', [
+            ['Notes', 'ssSurveyNotes']
+        ]);
+
+        // Generate filename
+        const customerName = data.ssCustomerName || 'Unknown';
+        const date = new Date().toISOString().split('T')[0];
+        const filename = `Site_Survey_${customerName.replace(/[^a-zA-Z0-9]/g, '_')}_${date}.pdf`;
+
+        doc.save(filename);
+    }
+
+    exportSiteSurveyToCSV() {
+        const data = this.collectSiteSurveyData();
+
+        // Create CSV content
+        const headers = Object.keys(data);
+        const values = Object.values(data).map(v => `"${(v || '').toString().replace(/"/g, '""')}"`);
+
+        const csvContent = headers.join(',') + '\n' + values.join(',');
+
+        // Create and download file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const customerName = data.ssCustomerName || 'Unknown';
+        const date = new Date().toISOString().split('T')[0];
+        link.download = `Site_Survey_${customerName.replace(/[^a-zA-Z0-9]/g, '_')}_${date}.csv`;
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
     }
 }
 
