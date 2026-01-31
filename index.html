@@ -1416,6 +1416,35 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script type="module" src="js/app.js"></script>
+    <script type="module" src="js/components/FrimbleChat.js"></script>
+
+    <!-- Frimble Chat Component -->
+    <button class="chat-toggle-btn" id="chatToggleBtn" title="Chat with Frimble">
+        <span class="chat-toggle-icon">🦊</span>
+    </button>
+
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-header">
+            <span class="chat-avatar">🦊</span>
+            <div class="chat-header-info">
+                <h3 class="chat-header-name">Frimble</h3>
+                <div class="chat-header-status">
+                    <span class="chat-status-dot" id="chatStatusDot"></span>
+                    <span id="chatStatusText">Connecting...</span>
+                </div>
+            </div>
+            <button class="chat-close-btn" id="chatCloseBtn">&times;</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-message system">Connecting to Frimble...</div>
+        </div>
+        <div class="chat-input-container">
+            <input type="text" class="chat-input" id="chatInput" placeholder="Type a message..." disabled>
+            <button class="chat-send-btn" id="chatSendBtn" disabled>
+                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            </button>
+        </div>
+    </div>
     <script>
         // Register Service Worker for offline support
         if ('serviceWorker' in navigator) {

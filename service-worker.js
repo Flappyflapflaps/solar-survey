@@ -1,12 +1,13 @@
 // Service Worker for Solar Site Survey - Offline Support
 
-const CACHE_NAME = 'solar-survey-v15';
+const CACHE_NAME = 'solar-survey-v16';
 const urlsToCache = [
     './',
     './index.html',
     './login.html',
     './styles.css',
     './js/app.js',
+    './js/components/FrimbleChat.js',
     './js/services/auth.js',
     './js/state/formState.js',
     './js/models/formData.js',
