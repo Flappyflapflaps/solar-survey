@@ -4056,9 +4056,11 @@ a:focus-visible {
 
 /* Main Layout */
 .vfb-main {
-    display: flex;
+    display: grid;
+    grid-template-columns: 220px 1fr 280px;
     flex: 1;
     overflow: hidden;
+    min-height: 0;
 }
 
 /* Left Palette */
@@ -4712,7 +4714,9 @@ a:focus-visible {
     }
 
     .vfb-main {
+        display: flex;
         flex-direction: column;
+        grid-template-columns: none;
     }
 
     .vfb-palette {
