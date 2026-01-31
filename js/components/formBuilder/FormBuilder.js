@@ -1,10 +1,9 @@
-// Form Builder V3 - Enhanced UI for creating and editing form templates
-// Features: Drag & drop, inline editing, duplicate, toast notifications, keyboard shortcuts
+// Form Builder V4 - Visual Drag & Drop Builder
+// JotForm-style: Palette on left, live canvas on right, no modals
 import { createElement, $, on } from '../../utils/dom.js';
-import { getFieldTypes, getFieldTypesByCategory, getDefaultFieldConfig, validateFieldConfig, generateFieldName } from './FieldFactory.js';
+import { getFieldTypesByCategory, getDefaultFieldConfig, validateFieldConfig, generateFieldName, fieldTypes } from './FieldFactory.js';
 import { formTemplateStorage } from '../../services/formTemplateStorage.js';
-import { FieldEditor } from './FieldEditor.js';
-import { FormRenderer } from './FormRenderer.js';
+import { createField } from './FieldFactory.js';
 import { toast } from '../../utils/toast.js';
 
 export class FormBuilder {
@@ -13,19 +12,16 @@ export class FormBuilder {
         this.options = {
             onSave: null,
             onCancel: null,
-            onPreview: null,
-            showLivePreview: false,
             ...options
         };
 
         this.template = null;
         this.fields = [];
+        this.fieldInstances = new Map(); // Store rendered field instances
         this.cleanupFunctions = [];
-        this.fieldEditor = null;
-        this.previewRenderer = null;
-        this.draggedItem = null;
-        this.dragOverItem = null;
-        this.selectedFieldIndex = null;
+        this.selectedFieldId = null;
+        this.draggedType = null;
+        this.draggedFieldId = null;
 
         this.init();
     }
@@ -35,7 +31,6 @@ export class FormBuilder {
             console.error('FormBuilder: Container not found');
             return;
         }
-
         this.createNewTemplate();
         this.render();
         this.setupKeyboardShortcuts();
@@ -62,154 +57,99 @@ export class FormBuilder {
         this.cleanup();
         this.container.innerHTML = '';
 
-        const wrapper = createElement('div', { className: 'form-builder-wrapper form-builder-v3' });
+        const wrapper = createElement('div', { className: 'vfb-wrapper' });
 
-        // Header with title and quick actions
+        // Header bar
         const header = this.createHeader();
         wrapper.appendChild(header);
 
-        // Main content area
-        const mainContent = createElement('div', { className: 'form-builder-main' });
+        // Main split pane
+        const main = createElement('div', { className: 'vfb-main' });
 
-        // Left side: Builder
-        const builderPane = createElement('div', { className: 'form-builder-pane' });
+        // Left: Field Palette
+        const palette = this.createPalette();
+        main.appendChild(palette);
 
-        // Template info section
-        const infoSection = this.createInfoSection();
-        builderPane.appendChild(infoSection);
+        // Right: Canvas + Settings
+        const rightPane = createElement('div', { className: 'vfb-right-pane' });
 
-        // Quick add toolbar (V3)
-        const quickAddBar = this.createQuickAddBar();
-        builderPane.appendChild(quickAddBar);
+        // Canvas area
+        const canvas = this.createCanvas();
+        rightPane.appendChild(canvas);
 
-        // Fields section
-        const fieldsSection = this.createFieldsSection();
-        builderPane.appendChild(fieldsSection);
+        // Settings panel (shows when field selected)
+        const settings = this.createSettingsPanel();
+        rightPane.appendChild(settings);
 
-        mainContent.appendChild(builderPane);
-
-        // Right side: Live preview (optional)
-        if (this.options.showLivePreview) {
-            const previewPane = this.createLivePreviewPane();
-            mainContent.appendChild(previewPane);
-        }
-
-        wrapper.appendChild(mainContent);
-
-        // Action buttons
-        const actionsSection = this.createActionsSection();
-        wrapper.appendChild(actionsSection);
+        main.appendChild(rightPane);
+        wrapper.appendChild(main);
 
         this.container.appendChild(wrapper);
+
+        // Render existing fields on canvas
+        this.renderFieldsOnCanvas();
     }
 
     createHeader() {
-        const header = createElement('div', { className: 'form-builder-header' });
+        const header = createElement('div', { className: 'vfb-header' });
 
-        const titleRow = createElement('div', { className: 'form-builder-title-row' });
-
-        const title = createElement('h2', {
-            className: 'form-builder-title',
-            textContent: this.template.id ? 'Edit Form Template' : 'Create New Form'
-        });
-        titleRow.appendChild(title);
-
-        // V3: Quick action buttons in header
-        const quickActions = createElement('div', { className: 'form-builder-quick-actions' });
-
-        const previewBtn = createElement('button', {
-            type: 'button',
-            className: 'quick-action-btn',
-            title: 'Preview (Ctrl+P)'
-        });
-        previewBtn.innerHTML = '<span class="quick-action-icon">👁</span>';
-        const previewCleanup = on(previewBtn, 'click', () => this.preview());
-        this.cleanupFunctions.push(previewCleanup);
-
-        const undoBtn = createElement('button', {
-            type: 'button',
-            className: 'quick-action-btn',
-            title: 'Undo (Ctrl+Z)',
-            disabled: true
-        });
-        undoBtn.innerHTML = '<span class="quick-action-icon">↶</span>';
-
-        quickActions.appendChild(previewBtn);
-        quickActions.appendChild(undoBtn);
-        titleRow.appendChild(quickActions);
-
-        header.appendChild(titleRow);
-
-        // V3: Keyboard shortcuts hint
-        const shortcuts = createElement('div', {
-            className: 'form-builder-shortcuts-hint',
-            innerHTML: '<kbd>Ctrl+S</kbd> Save &nbsp; <kbd>Ctrl+P</kbd> Preview &nbsp; <kbd>Del</kbd> Delete field'
-        });
-        header.appendChild(shortcuts);
-
-        return header;
-    }
-
-    createInfoSection() {
-        const section = createElement('div', { className: 'form-builder-section form-builder-info-section' });
-
-        // Template name and description in a row
-        const infoRow = createElement('div', { className: 'form-builder-info-row' });
-
-        // Template name input
-        const nameGroup = createElement('div', { className: 'form-group form-group-name' });
-        const nameLabel = createElement('label', {
-            htmlFor: 'templateName',
-            textContent: 'Form Name *'
-        });
+        // Left side: Form name input
+        const nameGroup = createElement('div', { className: 'vfb-header-name' });
         const nameInput = createElement('input', {
             type: 'text',
-            id: 'templateName',
-            className: 'form-builder-input',
-            placeholder: 'e.g., Site Inspection Form',
+            className: 'vfb-name-input',
+            placeholder: 'Untitled Form',
             value: this.template.name || ''
         });
-
         const nameCleanup = on(nameInput, 'input', (e) => {
             this.template.name = e.target.value;
         });
         this.cleanupFunctions.push(nameCleanup);
-
-        nameGroup.appendChild(nameLabel);
         nameGroup.appendChild(nameInput);
-        infoRow.appendChild(nameGroup);
 
-        // Template description input
-        const descGroup = createElement('div', { className: 'form-group form-group-desc' });
-        const descLabel = createElement('label', {
-            htmlFor: 'templateDescription',
-            textContent: 'Description'
+        // Right side: Action buttons
+        const actions = createElement('div', { className: 'vfb-header-actions' });
+
+        const previewBtn = createElement('button', {
+            type: 'button',
+            className: 'vfb-btn vfb-btn-secondary',
+            textContent: 'Preview'
         });
-        const descInput = createElement('input', {
-            type: 'text',
-            id: 'templateDescription',
-            className: 'form-builder-input',
-            placeholder: 'Brief description of the form...'
+        const previewCleanup = on(previewBtn, 'click', () => this.preview());
+        this.cleanupFunctions.push(previewCleanup);
+
+        const cancelBtn = createElement('button', {
+            type: 'button',
+            className: 'vfb-btn vfb-btn-secondary',
+            textContent: 'Cancel'
         });
-        descInput.value = this.template.description || '';
+        const cancelCleanup = on(cancelBtn, 'click', () => this.cancel());
+        this.cleanupFunctions.push(cancelCleanup);
 
-        const descCleanup = on(descInput, 'input', (e) => {
-            this.template.description = e.target.value;
+        const saveBtn = createElement('button', {
+            type: 'button',
+            className: 'vfb-btn vfb-btn-primary',
+            textContent: 'Save Form'
         });
-        this.cleanupFunctions.push(descCleanup);
+        const saveCleanup = on(saveBtn, 'click', () => this.save());
+        this.cleanupFunctions.push(saveCleanup);
 
-        descGroup.appendChild(descLabel);
-        descGroup.appendChild(descInput);
-        infoRow.appendChild(descGroup);
+        actions.appendChild(previewBtn);
+        actions.appendChild(cancelBtn);
+        actions.appendChild(saveBtn);
 
-        section.appendChild(infoRow);
+        header.appendChild(nameGroup);
+        header.appendChild(actions);
 
-        return section;
+        return header;
     }
 
-    // V3: Quick add toolbar with categorized field types
-    createQuickAddBar() {
-        const section = createElement('div', { className: 'form-builder-quick-add' });
+    createPalette() {
+        const palette = createElement('div', { className: 'vfb-palette' });
+
+        const title = createElement('div', { className: 'vfb-palette-title' });
+        title.textContent = 'Drag a field';
+        palette.appendChild(title);
 
         const categories = getFieldTypesByCategory();
 
@@ -217,505 +157,710 @@ export class FormBuilder {
             const category = categories[catKey];
             if (category.types.length === 0) return;
 
-            const catGroup = createElement('div', { className: 'quick-add-category' });
+            const catSection = createElement('div', { className: 'vfb-palette-category' });
 
-            const catLabel = createElement('span', {
-                className: 'quick-add-category-label',
+            const catLabel = createElement('div', {
+                className: 'vfb-palette-category-label',
                 textContent: category.label
             });
-            catGroup.appendChild(catLabel);
+            catSection.appendChild(catLabel);
 
-            const btnsWrapper = createElement('div', { className: 'quick-add-buttons' });
+            const fieldList = createElement('div', { className: 'vfb-palette-fields' });
 
             category.types.forEach(({ type, label, icon }) => {
-                const btn = createElement('button', {
-                    type: 'button',
-                    className: 'quick-add-btn',
-                    'data-field-type': type,
-                    title: `Add ${label} field`
+                const fieldBtn = createElement('div', {
+                    className: 'vfb-palette-field',
+                    draggable: true,
+                    'data-field-type': type
                 });
-                btn.innerHTML = `<span class="quick-add-icon">${icon}</span><span class="quick-add-label">${label}</span>`;
+                fieldBtn.innerHTML = `<span class="vfb-palette-icon">${icon}</span><span class="vfb-palette-label">${label}</span>`;
 
-                const cleanup = on(btn, 'click', () => this.addField(type));
-                this.cleanupFunctions.push(cleanup);
+                // Drag start from palette
+                const dragStartCleanup = on(fieldBtn, 'dragstart', (e) => {
+                    this.draggedType = type;
+                    this.draggedFieldId = null;
+                    e.target.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'copy';
+                    e.dataTransfer.setData('text/plain', type);
+                    document.querySelector('.vfb-canvas')?.classList.add('drag-active');
+                });
 
-                btnsWrapper.appendChild(btn);
+                const dragEndCleanup = on(fieldBtn, 'dragend', (e) => {
+                    this.draggedType = null;
+                    e.target.classList.remove('dragging');
+                    document.querySelector('.vfb-canvas')?.classList.remove('drag-active');
+                    document.querySelectorAll('.vfb-drop-zone').forEach(z => z.classList.remove('drag-over'));
+                });
+
+                // Click to add (fallback)
+                const clickCleanup = on(fieldBtn, 'click', () => {
+                    this.addField(type);
+                });
+
+                this.cleanupFunctions.push(dragStartCleanup, dragEndCleanup, clickCleanup);
+                fieldList.appendChild(fieldBtn);
             });
 
-            catGroup.appendChild(btnsWrapper);
-            section.appendChild(catGroup);
+            catSection.appendChild(fieldList);
+            palette.appendChild(catSection);
         });
 
-        return section;
+        return palette;
     }
 
-    createFieldsSection() {
-        const section = createElement('div', { className: 'form-builder-section' });
+    createCanvas() {
+        const canvasWrapper = createElement('div', { className: 'vfb-canvas-wrapper' });
 
-        const headerRow = createElement('div', { className: 'form-builder-section-header' });
+        const canvasHeader = createElement('div', { className: 'vfb-canvas-header' });
+        canvasHeader.innerHTML = `<span class="vfb-canvas-title">Your Form</span><span class="vfb-field-count">${this.fields.length} fields</span>`;
+        canvasWrapper.appendChild(canvasHeader);
 
-        const heading = createElement('h3', {
-            className: 'form-builder-section-title',
-            textContent: 'Fields'
+        const canvas = createElement('div', {
+            className: 'vfb-canvas',
+            id: 'vfbCanvas'
         });
-        headerRow.appendChild(heading);
 
-        const fieldCount = createElement('span', {
-            className: 'field-count',
-            textContent: `${this.fields.length} field${this.fields.length !== 1 ? 's' : ''}`
+        // Drop zone handling on canvas
+        const dragOverCleanup = on(canvas, 'dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = this.draggedType ? 'copy' : 'move';
         });
-        headerRow.appendChild(fieldCount);
 
-        section.appendChild(headerRow);
-
-        const fieldsList = createElement('div', {
-            className: 'form-builder-fields-list',
-            id: 'builderFieldsList'
+        const dropCleanup = on(canvas, 'drop', (e) => {
+            e.preventDefault();
+            if (this.draggedType) {
+                this.addField(this.draggedType);
+            }
+            canvas.classList.remove('drag-active');
         });
+
+        this.cleanupFunctions.push(dragOverCleanup, dropCleanup);
+
+        canvasWrapper.appendChild(canvas);
+        return canvasWrapper;
+    }
+
+    createSettingsPanel() {
+        const panel = createElement('div', {
+            className: 'vfb-settings-panel',
+            id: 'vfbSettingsPanel'
+        });
+        panel.style.display = 'none';
+
+        const header = createElement('div', { className: 'vfb-settings-header' });
+        header.innerHTML = '<span>Field Settings</span>';
+
+        const closeBtn = createElement('button', {
+            type: 'button',
+            className: 'vfb-settings-close',
+            textContent: '×'
+        });
+        const closeCleanup = on(closeBtn, 'click', () => this.deselectField());
+        this.cleanupFunctions.push(closeCleanup);
+        header.appendChild(closeBtn);
+
+        panel.appendChild(header);
+
+        const body = createElement('div', {
+            className: 'vfb-settings-body',
+            id: 'vfbSettingsBody'
+        });
+        panel.appendChild(body);
+
+        return panel;
+    }
+
+    renderFieldsOnCanvas() {
+        const canvas = document.getElementById('vfbCanvas');
+        if (!canvas) return;
+
+        canvas.innerHTML = '';
+        this.fieldInstances.clear();
 
         if (this.fields.length === 0) {
-            const empty = createElement('div', { className: 'form-builder-empty' });
+            const empty = createElement('div', { className: 'vfb-canvas-empty' });
             empty.innerHTML = `
-                <div class="empty-icon">📝</div>
-                <div class="empty-text">No fields yet</div>
-                <div class="empty-hint">Click a field type above to add your first field</div>
+                <div class="vfb-empty-icon">📋</div>
+                <div class="vfb-empty-title">Start building your form</div>
+                <div class="vfb-empty-text">Drag fields from the left panel or click to add</div>
             `;
-            fieldsList.appendChild(empty);
-        } else {
-            this.fields.forEach((field, index) => {
-                const fieldItem = this.createFieldItem(field, index);
-                fieldsList.appendChild(fieldItem);
-            });
+            canvas.appendChild(empty);
+            return;
         }
 
-        section.appendChild(fieldsList);
-        return section;
+        this.fields.forEach((fieldConfig, index) => {
+            const fieldWrapper = this.createCanvasField(fieldConfig, index);
+            canvas.appendChild(fieldWrapper);
+        });
+
+        // Update field count
+        const countEl = document.querySelector('.vfb-field-count');
+        if (countEl) countEl.textContent = `${this.fields.length} field${this.fields.length !== 1 ? 's' : ''}`;
     }
 
-    createFieldItem(field, index) {
-        const item = createElement('div', {
-            className: 'form-builder-field-item',
-            'data-field-id': field.id,
+    createCanvasField(fieldConfig, index) {
+        const wrapper = createElement('div', {
+            className: 'vfb-canvas-field',
+            'data-field-id': fieldConfig.id,
             'data-index': index,
             draggable: true
         });
 
-        // V3: Drag handle
-        const dragHandle = createElement('div', {
-            className: 'field-drag-handle',
-            title: 'Drag to reorder'
-        });
-        dragHandle.innerHTML = '⋮⋮';
-
-        // Setup drag events
-        const dragStartCleanup = on(item, 'dragstart', (e) => this.handleDragStart(e, index));
-        const dragEndCleanup = on(item, 'dragend', () => this.handleDragEnd());
-        const dragOverCleanup = on(item, 'dragover', (e) => this.handleDragOver(e, index));
-        const dragLeaveCleanup = on(item, 'dragleave', () => this.handleDragLeave(item));
-        const dropCleanup = on(item, 'drop', (e) => this.handleDrop(e, index));
-
-        this.cleanupFunctions.push(dragStartCleanup, dragEndCleanup, dragOverCleanup, dragLeaveCleanup, dropCleanup);
-
-        item.appendChild(dragHandle);
-
-        // Field info with inline editing
-        const info = createElement('div', { className: 'field-info' });
-
-        // V3: Inline editable label
-        const labelWrapper = createElement('div', { className: 'field-label-wrapper' });
-
-        const label = createElement('span', {
-            className: 'field-label field-label-editable',
-            textContent: field.label,
-            title: 'Click to edit label'
-        });
-
-        const labelCleanup = on(label, 'click', (e) => {
-            e.stopPropagation();
-            this.startInlineEdit(label, field, index, 'label');
-        });
-        this.cleanupFunctions.push(labelCleanup);
-
-        labelWrapper.appendChild(label);
-
-        // Type badge
-        const type = createElement('span', {
-            className: `field-type-badge field-type-${field.type}`,
-            textContent: field.type
-        });
-        labelWrapper.appendChild(type);
-
-        // Required badge
-        if (field.required) {
-            const requiredBadge = createElement('span', {
-                className: 'field-required-badge',
-                textContent: 'Required'
-            });
-            labelWrapper.appendChild(requiredBadge);
+        if (this.selectedFieldId === fieldConfig.id) {
+            wrapper.classList.add('selected');
         }
 
-        info.appendChild(labelWrapper);
+        // Floating toolbar
+        const toolbar = createElement('div', { className: 'vfb-field-toolbar' });
+        toolbar.innerHTML = `
+            <button type="button" class="vfb-toolbar-btn" data-action="duplicate" title="Duplicate">⧉</button>
+            <button type="button" class="vfb-toolbar-btn vfb-toolbar-delete" data-action="delete" title="Delete">🗑</button>
+        `;
 
-        // Field name (data key) - subtle display
-        const nameDisplay = createElement('div', {
-            className: 'field-name-display',
-            textContent: `→ ${field.name}`
-        });
-        info.appendChild(nameDisplay);
-
-        item.appendChild(info);
-
-        // Action buttons
-        const actions = createElement('div', { className: 'field-actions' });
-
-        // V3: Duplicate button
-        const duplicateBtn = createElement('button', {
-            type: 'button',
-            className: 'field-action-btn field-duplicate-btn',
-            title: 'Duplicate field'
-        });
-        duplicateBtn.innerHTML = '⧉';
-        const duplicateCleanup = on(duplicateBtn, 'click', (e) => {
+        const toolbarCleanup = on(toolbar, 'click', (e) => {
+            const btn = e.target.closest('[data-action]');
+            if (!btn) return;
             e.stopPropagation();
-            this.duplicateField(index);
+            const action = btn.dataset.action;
+            if (action === 'duplicate') this.duplicateField(fieldConfig.id);
+            if (action === 'delete') this.deleteField(fieldConfig.id);
         });
-        this.cleanupFunctions.push(duplicateCleanup);
+        this.cleanupFunctions.push(toolbarCleanup);
 
-        // Edit button
-        const editBtn = createElement('button', {
-            type: 'button',
-            className: 'field-action-btn field-edit-btn',
-            title: 'Edit field settings'
+        wrapper.appendChild(toolbar);
+
+        // Render actual field preview
+        const fieldPreview = createElement('div', { className: 'vfb-field-preview' });
+
+        // Create a simplified preview of the field
+        const typeInfo = fieldTypes[fieldConfig.type];
+        const icon = typeInfo?.icon || '?';
+
+        // For layout types, render differently
+        if (fieldConfig.type === 'section') {
+            fieldPreview.innerHTML = `
+                <div class="vfb-preview-section">
+                    <div class="vfb-preview-section-title">${fieldConfig.label}</div>
+                    ${fieldConfig.description ? `<div class="vfb-preview-section-desc">${fieldConfig.description}</div>` : ''}
+                </div>
+            `;
+        } else if (fieldConfig.type === 'info') {
+            fieldPreview.innerHTML = `
+                <div class="vfb-preview-info vfb-preview-info-${fieldConfig.style || 'info'}">
+                    <span class="vfb-preview-info-icon">${icon}</span>
+                    <span>${fieldConfig.content || 'Info block'}</span>
+                </div>
+            `;
+        } else {
+            // Regular input field preview
+            fieldPreview.innerHTML = `
+                <label class="vfb-preview-label">
+                    ${fieldConfig.label}
+                    ${fieldConfig.required ? '<span class="vfb-required">*</span>' : ''}
+                </label>
+                ${this.getFieldPreviewHTML(fieldConfig)}
+            `;
+        }
+
+        wrapper.appendChild(fieldPreview);
+
+        // Drag handle indicator
+        const dragHint = createElement('div', { className: 'vfb-drag-hint' });
+        dragHint.innerHTML = '⋮⋮';
+        wrapper.appendChild(dragHint);
+
+        // Event: Click to select
+        const clickCleanup = on(wrapper, 'click', (e) => {
+            if (e.target.closest('.vfb-field-toolbar')) return;
+            this.selectField(fieldConfig.id);
         });
-        editBtn.innerHTML = '⚙';
-        const editCleanup = on(editBtn, 'click', (e) => {
+
+        // Event: Drag to reorder
+        const dragStartCleanup = on(wrapper, 'dragstart', (e) => {
+            this.draggedFieldId = fieldConfig.id;
+            this.draggedType = null;
+            wrapper.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+
+        const dragEndCleanup = on(wrapper, 'dragend', () => {
+            this.draggedFieldId = null;
+            wrapper.classList.remove('dragging');
+            document.querySelectorAll('.vfb-canvas-field').forEach(f => f.classList.remove('drag-over', 'drag-over-top', 'drag-over-bottom'));
+        });
+
+        const dragOverCleanup = on(wrapper, 'dragover', (e) => {
+            e.preventDefault();
+            if (!this.draggedFieldId || this.draggedFieldId === fieldConfig.id) {
+                if (this.draggedType) {
+                    // Dragging from palette - show insert indicator
+                    const rect = wrapper.getBoundingClientRect();
+                    const midY = rect.top + rect.height / 2;
+                    wrapper.classList.remove('drag-over-top', 'drag-over-bottom');
+                    wrapper.classList.add(e.clientY < midY ? 'drag-over-top' : 'drag-over-bottom');
+                }
+                return;
+            }
+            const rect = wrapper.getBoundingClientRect();
+            const midY = rect.top + rect.height / 2;
+            wrapper.classList.remove('drag-over-top', 'drag-over-bottom');
+            wrapper.classList.add(e.clientY < midY ? 'drag-over-top' : 'drag-over-bottom');
+        });
+
+        const dragLeaveCleanup = on(wrapper, 'dragleave', () => {
+            wrapper.classList.remove('drag-over-top', 'drag-over-bottom');
+        });
+
+        const dropCleanup = on(wrapper, 'drop', (e) => {
+            e.preventDefault();
             e.stopPropagation();
-            this.editField(index);
-        });
-        this.cleanupFunctions.push(editCleanup);
 
-        // Delete button
-        const deleteBtn = createElement('button', {
-            type: 'button',
-            className: 'field-action-btn field-delete-btn',
-            title: 'Delete field'
-        });
-        deleteBtn.innerHTML = '×';
-        const deleteCleanup = on(deleteBtn, 'click', (e) => {
-            e.stopPropagation();
-            this.deleteField(index);
-        });
-        this.cleanupFunctions.push(deleteCleanup);
+            const rect = wrapper.getBoundingClientRect();
+            const insertBefore = e.clientY < rect.top + rect.height / 2;
 
-        actions.appendChild(duplicateBtn);
-        actions.appendChild(editBtn);
-        actions.appendChild(deleteBtn);
-        item.appendChild(actions);
+            if (this.draggedType) {
+                // Dropping new field from palette
+                this.addFieldAt(this.draggedType, index + (insertBefore ? 0 : 1));
+            } else if (this.draggedFieldId && this.draggedFieldId !== fieldConfig.id) {
+                // Reordering existing field
+                this.moveField(this.draggedFieldId, fieldConfig.id, insertBefore);
+            }
 
-        // Click to select
-        const selectCleanup = on(item, 'click', () => {
-            this.selectField(index);
+            wrapper.classList.remove('drag-over-top', 'drag-over-bottom');
         });
-        this.cleanupFunctions.push(selectCleanup);
 
-        return item;
+        this.cleanupFunctions.push(clickCleanup, dragStartCleanup, dragEndCleanup, dragOverCleanup, dragLeaveCleanup, dropCleanup);
+
+        return wrapper;
     }
 
-    // V3: Inline label editing
-    startInlineEdit(element, field, index, property) {
-        const currentValue = field[property];
+    getFieldPreviewHTML(config) {
+        const placeholder = config.placeholder || '';
+
+        switch (config.type) {
+            case 'text':
+                return `<input type="text" class="vfb-preview-input" placeholder="${placeholder}" disabled>`;
+            case 'number':
+                return `<input type="number" class="vfb-preview-input" placeholder="${placeholder}" disabled>`;
+            case 'textarea':
+                return `<textarea class="vfb-preview-textarea" placeholder="${placeholder}" disabled rows="3"></textarea>`;
+            case 'select':
+                const opts = (config.options || []).map(o => `<option>${o.label}</option>`).join('');
+                return `<select class="vfb-preview-select" disabled><option>${placeholder || 'Select...'}</option>${opts}</select>`;
+            case 'date':
+                return `<input type="date" class="vfb-preview-input" disabled>`;
+            case 'time':
+                return `<input type="time" class="vfb-preview-input" disabled>`;
+            case 'checkbox':
+                const checks = (config.options || []).map(o => `
+                    <label class="vfb-preview-check"><input type="checkbox" disabled> ${o.label}</label>
+                `).join('');
+                return `<div class="vfb-preview-checks">${checks}</div>`;
+            case 'radio':
+                const radios = (config.options || []).map(o => `
+                    <label class="vfb-preview-radio"><input type="radio" disabled> ${o.label}</label>
+                `).join('');
+                return `<div class="vfb-preview-radios">${radios}</div>`;
+            case 'toggle':
+                return `<div class="vfb-preview-toggle"><span>${config.noLabel || 'No'}</span><div class="vfb-toggle-track"><div class="vfb-toggle-thumb"></div></div><span>${config.yesLabel || 'Yes'}</span></div>`;
+            case 'photo':
+                return `<div class="vfb-preview-photo">📷 Click to add photo</div>`;
+            case 'signature':
+                return `<div class="vfb-preview-signature">✍ Sign here</div>`;
+            default:
+                return `<input type="text" class="vfb-preview-input" placeholder="${placeholder}" disabled>`;
+        }
+    }
+
+    selectField(fieldId) {
+        this.selectedFieldId = fieldId;
+
+        // Update canvas selection
+        document.querySelectorAll('.vfb-canvas-field').forEach(f => {
+            f.classList.toggle('selected', f.dataset.fieldId === fieldId);
+        });
+
+        // Show settings panel
+        this.showSettingsPanel(fieldId);
+    }
+
+    deselectField() {
+        this.selectedFieldId = null;
+        document.querySelectorAll('.vfb-canvas-field').forEach(f => f.classList.remove('selected'));
+
+        const panel = document.getElementById('vfbSettingsPanel');
+        if (panel) panel.style.display = 'none';
+    }
+
+    showSettingsPanel(fieldId) {
+        const field = this.fields.find(f => f.id === fieldId);
+        if (!field) return;
+
+        const panel = document.getElementById('vfbSettingsPanel');
+        const body = document.getElementById('vfbSettingsBody');
+        if (!panel || !body) return;
+
+        panel.style.display = 'flex';
+        body.innerHTML = '';
+
+        // Build settings form
+        const typeInfo = fieldTypes[field.type];
+
+        // Type indicator
+        const typeRow = createElement('div', { className: 'vfb-setting-type' });
+        typeRow.innerHTML = `<span class="vfb-setting-type-icon">${typeInfo?.icon || '?'}</span> ${typeInfo?.label || field.type}`;
+        body.appendChild(typeRow);
+
+        // Label
+        body.appendChild(this.createSettingInput('label', 'Label', field.label, (val) => {
+            field.label = val;
+            if (!field.nameManuallySet) {
+                field.name = generateFieldName(val);
+            }
+            this.renderFieldsOnCanvas();
+        }));
+
+        // Field name (not for layout types)
+        if (!['section', 'info'].includes(field.type)) {
+            body.appendChild(this.createSettingInput('name', 'Field ID', field.name, (val) => {
+                field.name = val;
+                field.nameManuallySet = true;
+            }));
+
+            // Required toggle
+            body.appendChild(this.createSettingToggle('required', 'Required', field.required, (val) => {
+                field.required = val;
+                this.renderFieldsOnCanvas();
+            }));
+        }
+
+        // Placeholder (for text inputs)
+        if (['text', 'number', 'textarea', 'select'].includes(field.type)) {
+            body.appendChild(this.createSettingInput('placeholder', 'Placeholder', field.placeholder || '', (val) => {
+                field.placeholder = val;
+                this.renderFieldsOnCanvas();
+            }));
+        }
+
+        // Type-specific settings
+        this.addTypeSpecificSettings(body, field);
+
+        // Delete button at bottom
+        const deleteBtn = createElement('button', {
+            type: 'button',
+            className: 'vfb-btn vfb-btn-danger vfb-settings-delete',
+            textContent: 'Delete Field'
+        });
+        const deleteCleanup = on(deleteBtn, 'click', () => this.deleteField(fieldId));
+        this.cleanupFunctions.push(deleteCleanup);
+        body.appendChild(deleteBtn);
+    }
+
+    createSettingInput(name, label, value, onChange) {
+        const group = createElement('div', { className: 'vfb-setting-group' });
+        group.innerHTML = `<label class="vfb-setting-label">${label}</label>`;
 
         const input = createElement('input', {
             type: 'text',
-            className: 'inline-edit-input',
-            value: currentValue
+            className: 'vfb-setting-input',
+            value: value || ''
         });
 
-        element.style.display = 'none';
-        element.parentNode.insertBefore(input, element);
-        input.focus();
-        input.select();
+        const cleanup = on(input, 'input', (e) => onChange(e.target.value));
+        this.cleanupFunctions.push(cleanup);
 
-        const finishEdit = (save = true) => {
-            const newValue = input.value.trim();
+        group.appendChild(input);
+        return group;
+    }
 
-            if (save && newValue && newValue !== currentValue) {
-                field[property] = newValue;
+    createSettingToggle(name, label, checked, onChange) {
+        const group = createElement('div', { className: 'vfb-setting-group vfb-setting-toggle-group' });
 
-                // V3: Auto-generate name from label
-                if (property === 'label' && !field.nameManuallySet) {
-                    field.name = generateFieldName(newValue);
-                }
+        const labelEl = createElement('label', { className: 'vfb-setting-label', textContent: label });
 
-                toast.success('Field updated');
-            }
+        const toggle = createElement('label', { className: 'vfb-setting-toggle' });
+        const checkbox = createElement('input', { type: 'checkbox' });
+        checkbox.checked = !!checked;
+        const slider = createElement('span', { className: 'vfb-setting-toggle-slider' });
 
-            input.remove();
-            element.style.display = '';
-            element.textContent = field[property];
+        const cleanup = on(checkbox, 'change', (e) => onChange(e.target.checked));
+        this.cleanupFunctions.push(cleanup);
 
-            // Update name display if label changed
-            if (property === 'label') {
-                const item = element.closest('.form-builder-field-item');
-                const nameDisplay = item.querySelector('.field-name-display');
-                if (nameDisplay) {
-                    nameDisplay.textContent = `→ ${field.name}`;
-                }
-            }
+        toggle.appendChild(checkbox);
+        toggle.appendChild(slider);
+
+        group.appendChild(labelEl);
+        group.appendChild(toggle);
+        return group;
+    }
+
+    createSettingTextarea(name, label, value, onChange) {
+        const group = createElement('div', { className: 'vfb-setting-group' });
+        group.innerHTML = `<label class="vfb-setting-label">${label}</label>`;
+
+        const textarea = createElement('textarea', {
+            className: 'vfb-setting-textarea',
+            rows: 3
+        });
+        textarea.value = value || '';
+
+        const cleanup = on(textarea, 'input', (e) => onChange(e.target.value));
+        this.cleanupFunctions.push(cleanup);
+
+        group.appendChild(textarea);
+        return group;
+    }
+
+    addTypeSpecificSettings(container, field) {
+        const type = field.type;
+
+        // Options editor for select, checkbox, radio
+        if (['select', 'checkbox', 'radio'].includes(type)) {
+            container.appendChild(this.createOptionsEditor(field));
+        }
+
+        // Number min/max
+        if (type === 'number') {
+            container.appendChild(this.createSettingInput('min', 'Min Value', field.min, (val) => {
+                field.min = val ? parseFloat(val) : null;
+            }));
+            container.appendChild(this.createSettingInput('max', 'Max Value', field.max, (val) => {
+                field.max = val ? parseFloat(val) : null;
+            }));
+        }
+
+        // Toggle labels
+        if (type === 'toggle') {
+            container.appendChild(this.createSettingInput('yesLabel', 'Yes Label', field.yesLabel || 'Yes', (val) => {
+                field.yesLabel = val;
+                this.renderFieldsOnCanvas();
+            }));
+            container.appendChild(this.createSettingInput('noLabel', 'No Label', field.noLabel || 'No', (val) => {
+                field.noLabel = val;
+                this.renderFieldsOnCanvas();
+            }));
+        }
+
+        // Section description
+        if (type === 'section') {
+            container.appendChild(this.createSettingTextarea('description', 'Description', field.description, (val) => {
+                field.description = val;
+                this.renderFieldsOnCanvas();
+            }));
+        }
+
+        // Info content and style
+        if (type === 'info') {
+            container.appendChild(this.createSettingTextarea('content', 'Content', field.content, (val) => {
+                field.content = val;
+                this.renderFieldsOnCanvas();
+            }));
+
+            const styleGroup = createElement('div', { className: 'vfb-setting-group' });
+            styleGroup.innerHTML = `<label class="vfb-setting-label">Style</label>`;
+            const styleSelect = createElement('select', { className: 'vfb-setting-input' });
+            ['info', 'warning', 'success', 'error', 'tip'].forEach(s => {
+                const opt = createElement('option', { value: s, textContent: s.charAt(0).toUpperCase() + s.slice(1) });
+                if (field.style === s) opt.selected = true;
+                styleSelect.appendChild(opt);
+            });
+            const styleCleanup = on(styleSelect, 'change', (e) => {
+                field.style = e.target.value;
+                this.renderFieldsOnCanvas();
+            });
+            this.cleanupFunctions.push(styleCleanup);
+            styleGroup.appendChild(styleSelect);
+            container.appendChild(styleGroup);
+        }
+
+        // Photo settings
+        if (type === 'photo') {
+            container.appendChild(this.createSettingToggle('multiple', 'Allow Multiple', field.multiple, (val) => {
+                field.multiple = val;
+            }));
+        }
+    }
+
+    createOptionsEditor(field) {
+        const group = createElement('div', { className: 'vfb-setting-group vfb-options-editor' });
+        group.innerHTML = `<label class="vfb-setting-label">Options</label>`;
+
+        const list = createElement('div', { className: 'vfb-options-list' });
+
+        const renderOptions = () => {
+            list.innerHTML = '';
+            (field.options || []).forEach((opt, i) => {
+                const row = createElement('div', { className: 'vfb-option-row' });
+
+                const input = createElement('input', {
+                    type: 'text',
+                    className: 'vfb-option-input',
+                    value: opt.label,
+                    placeholder: 'Option label'
+                });
+
+                const inputCleanup = on(input, 'input', (e) => {
+                    opt.label = e.target.value;
+                    opt.value = generateFieldName(e.target.value) || `option${i}`;
+                    this.renderFieldsOnCanvas();
+                });
+                this.cleanupFunctions.push(inputCleanup);
+
+                const removeBtn = createElement('button', {
+                    type: 'button',
+                    className: 'vfb-option-remove',
+                    textContent: '×'
+                });
+                const removeCleanup = on(removeBtn, 'click', () => {
+                    field.options.splice(i, 1);
+                    renderOptions();
+                    this.renderFieldsOnCanvas();
+                });
+                this.cleanupFunctions.push(removeCleanup);
+
+                row.appendChild(input);
+                row.appendChild(removeBtn);
+                list.appendChild(row);
+            });
         };
 
-        const keydownCleanup = on(input, 'keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                finishEdit(true);
-            } else if (e.key === 'Escape') {
-                finishEdit(false);
-            }
-        });
+        renderOptions();
+        group.appendChild(list);
 
-        const blurCleanup = on(input, 'blur', () => finishEdit(true));
-
-        this.cleanupFunctions.push(keydownCleanup, blurCleanup);
-    }
-
-    // V3: Drag and drop handlers
-    handleDragStart(e, index) {
-        this.draggedItem = index;
-        e.target.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', index);
-    }
-
-    handleDragEnd() {
-        this.draggedItem = null;
-        document.querySelectorAll('.form-builder-field-item').forEach(item => {
-            item.classList.remove('dragging', 'drag-over');
-        });
-    }
-
-    handleDragOver(e, index) {
-        e.preventDefault();
-        if (this.draggedItem === null || this.draggedItem === index) return;
-
-        const item = e.target.closest('.form-builder-field-item');
-        if (item && !item.classList.contains('dragging')) {
-            item.classList.add('drag-over');
-        }
-    }
-
-    handleDragLeave(item) {
-        item.classList.remove('drag-over');
-    }
-
-    handleDrop(e, targetIndex) {
-        e.preventDefault();
-        const sourceIndex = this.draggedItem;
-
-        if (sourceIndex === null || sourceIndex === targetIndex) return;
-
-        // Reorder fields
-        const [movedField] = this.fields.splice(sourceIndex, 1);
-        this.fields.splice(targetIndex, 0, movedField);
-
-        // Update order values
-        this.fields.forEach((field, i) => {
-            field.order = i;
-        });
-
-        toast.success('Field moved');
-        this.render();
-    }
-
-    selectField(index) {
-        // Remove previous selection
-        document.querySelectorAll('.form-builder-field-item').forEach(item => {
-            item.classList.remove('selected');
-        });
-
-        // Add selection to current
-        const item = document.querySelector(`[data-index="${index}"]`);
-        if (item) {
-            item.classList.add('selected');
-        }
-        this.selectedFieldIndex = index;
-    }
-
-    // V3: Live preview pane
-    createLivePreviewPane() {
-        const pane = createElement('div', { className: 'form-builder-preview-pane' });
-
-        const header = createElement('div', { className: 'preview-pane-header' });
-        header.innerHTML = '<h4>Live Preview</h4>';
-        pane.appendChild(header);
-
-        const previewContainer = createElement('div', {
-            className: 'preview-pane-content',
-            id: 'livePreviewContainer'
-        });
-        pane.appendChild(previewContainer);
-
-        return pane;
-    }
-
-    createActionsSection() {
-        const section = createElement('div', { className: 'form-builder-actions' });
-
-        // Preview button
-        const previewBtn = createElement('button', {
+        const addBtn = createElement('button', {
             type: 'button',
-            className: 'btn-secondary form-builder-btn',
-            textContent: 'Preview'
+            className: 'vfb-btn vfb-btn-small',
+            textContent: '+ Add Option'
         });
-        const previewCleanup = on(previewBtn, 'click', () => this.preview());
-        this.cleanupFunctions.push(previewCleanup);
-
-        // Cancel button
-        const cancelBtn = createElement('button', {
-            type: 'button',
-            className: 'btn-secondary form-builder-btn',
-            textContent: 'Cancel'
+        const addCleanup = on(addBtn, 'click', () => {
+            if (!field.options) field.options = [];
+            field.options.push({ value: `option${field.options.length + 1}`, label: `Option ${field.options.length + 1}` });
+            renderOptions();
+            this.renderFieldsOnCanvas();
         });
-        const cancelCleanup = on(cancelBtn, 'click', () => this.cancel());
-        this.cleanupFunctions.push(cancelCleanup);
+        this.cleanupFunctions.push(addCleanup);
+        group.appendChild(addBtn);
 
-        // Save button
-        const saveBtn = createElement('button', {
-            type: 'button',
-            className: 'btn-primary form-builder-btn form-builder-save-btn',
-            textContent: 'Save Template'
-        });
-        const saveCleanup = on(saveBtn, 'click', () => this.save());
-        this.cleanupFunctions.push(saveCleanup);
-
-        section.appendChild(previewBtn);
-        section.appendChild(cancelBtn);
-        section.appendChild(saveBtn);
-
-        return section;
+        return group;
     }
 
     addField(type) {
         const order = this.fields.length;
         const fieldConfig = getDefaultFieldConfig(type, order);
-
         if (fieldConfig) {
             this.fields.push(fieldConfig);
-            toast.success(`${fieldConfig.label} added`);
-            this.render();
-
-            // Auto-scroll to new field
-            requestAnimationFrame(() => {
-                const list = document.getElementById('builderFieldsList');
-                if (list) list.scrollTop = list.scrollHeight;
-            });
+            this.renderFieldsOnCanvas();
+            this.selectField(fieldConfig.id);
+            toast.success(`${fieldTypes[type]?.label || type} added`);
         }
     }
 
-    // V3: Duplicate field
-    duplicateField(index) {
-        const original = this.fields[index];
-        if (!original) return;
+    addFieldAt(type, index) {
+        const fieldConfig = getDefaultFieldConfig(type, index);
+        if (fieldConfig) {
+            this.fields.splice(index, 0, fieldConfig);
+            this.reorderFields();
+            this.renderFieldsOnCanvas();
+            this.selectField(fieldConfig.id);
+            toast.success(`${fieldTypes[type]?.label || type} added`);
+        }
+    }
 
+    duplicateField(fieldId) {
+        const index = this.fields.findIndex(f => f.id === fieldId);
+        if (index === -1) return;
+
+        const original = this.fields[index];
         const duplicate = {
-            ...original,
+            ...JSON.parse(JSON.stringify(original)),
             id: `field_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
             name: `${original.name}_copy`,
-            label: `${original.label} (Copy)`,
-            order: this.fields.length
+            label: `${original.label} (Copy)`
         };
 
-        // Deep copy options if present
-        if (original.options) {
-            duplicate.options = JSON.parse(JSON.stringify(original.options));
+        this.fields.splice(index + 1, 0, duplicate);
+        this.reorderFields();
+        this.renderFieldsOnCanvas();
+        this.selectField(duplicate.id);
+        toast.success('Field duplicated');
+    }
+
+    deleteField(fieldId) {
+        const index = this.fields.findIndex(f => f.id === fieldId);
+        if (index === -1) return;
+
+        const field = this.fields[index];
+        this.fields.splice(index, 1);
+        this.reorderFields();
+
+        if (this.selectedFieldId === fieldId) {
+            this.deselectField();
         }
 
-        this.fields.push(duplicate);
-        toast.success('Field duplicated');
-        this.render();
+        this.renderFieldsOnCanvas();
+        toast.success(`${field.label} deleted`);
     }
 
-    editField(index) {
-        const field = this.fields[index];
-        if (!field) return;
+    moveField(draggedId, targetId, insertBefore) {
+        const draggedIndex = this.fields.findIndex(f => f.id === draggedId);
+        const targetIndex = this.fields.findIndex(f => f.id === targetId);
 
-        this.fieldEditor = new FieldEditor(field, (updatedField) => {
-            this.fields[index] = updatedField;
-            toast.success('Field updated');
-            this.render();
-        });
-        this.fieldEditor.show();
+        if (draggedIndex === -1 || targetIndex === -1) return;
+
+        const [draggedField] = this.fields.splice(draggedIndex, 1);
+
+        let newIndex = targetIndex;
+        if (draggedIndex < targetIndex) newIndex--;
+        if (!insertBefore) newIndex++;
+
+        this.fields.splice(newIndex, 0, draggedField);
+        this.reorderFields();
+        this.renderFieldsOnCanvas();
     }
 
-    deleteField(index) {
-        const field = this.fields[index];
-
-        // V3: Use custom dialog instead of confirm()
-        this.showConfirmDialog(
-            'Delete Field',
-            `Are you sure you want to delete "${field.label}"?`,
-            () => {
-                this.fields.splice(index, 1);
-                // Update order values
-                this.fields.forEach((f, i) => {
-                    f.order = i;
-                });
-                toast.success('Field deleted');
-                this.render();
-            }
-        );
-    }
-
-    moveField(index, direction) {
-        const newIndex = index + direction;
-        if (newIndex < 0 || newIndex >= this.fields.length) return;
-
-        // Swap fields
-        const temp = this.fields[index];
-        this.fields[index] = this.fields[newIndex];
-        this.fields[newIndex] = temp;
-
-        // Update order values
+    reorderFields() {
         this.fields.forEach((field, i) => {
             field.order = i;
         });
-
-        this.render();
     }
 
-    // V3: Custom confirm dialog
-    showConfirmDialog(title, message, onConfirm) {
-        const overlay = createElement('div', { className: 'form-builder-modal-overlay' });
-        const modal = createElement('div', { className: 'form-builder-modal confirm-dialog' });
+    preview() {
+        const validation = this.validate();
+        if (!validation.isValid) {
+            toast.errors(validation.errors, 'Cannot preview:');
+            return;
+        }
 
-        modal.innerHTML = `
-            <div class="confirm-dialog-header">
-                <h3>${title}</h3>
-            </div>
-            <div class="confirm-dialog-body">
-                <p>${message}</p>
-            </div>
-            <div class="confirm-dialog-footer">
-                <button type="button" class="btn-secondary" id="confirmCancel">Cancel</button>
-                <button type="button" class="btn-primary btn-danger" id="confirmOk">Delete</button>
-            </div>
-        `;
+        // Create preview modal
+        const overlay = createElement('div', { className: 'vfb-preview-overlay' });
+        const modal = createElement('div', { className: 'vfb-preview-modal' });
 
+        const header = createElement('div', { className: 'vfb-preview-header' });
+        header.innerHTML = `<span>Preview: ${this.template.name || 'Untitled'}</span>`;
+
+        const closeBtn = createElement('button', { type: 'button', className: 'vfb-preview-close', textContent: '×' });
+        on(closeBtn, 'click', () => overlay.remove());
+        header.appendChild(closeBtn);
+
+        const body = createElement('div', { className: 'vfb-preview-body' });
+
+        // Render each field
+        this.fields.forEach(fieldConfig => {
+            const fieldInstance = createField(fieldConfig);
+            if (fieldInstance) {
+                body.appendChild(fieldInstance.render());
+            }
+        });
+
+        modal.appendChild(header);
+        modal.appendChild(body);
         overlay.appendChild(modal);
+
+        on(overlay, 'click', (e) => {
+            if (e.target === overlay) overlay.remove();
+        });
+
         document.body.appendChild(overlay);
-
-        const cancelBtn = modal.querySelector('#confirmCancel');
-        const okBtn = modal.querySelector('#confirmOk');
-
-        const close = () => overlay.remove();
-
-        cancelBtn.addEventListener('click', close);
-        okBtn.addEventListener('click', () => {
-            onConfirm();
-            close();
-        });
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) close();
-        });
     }
 
     validate() {
@@ -730,81 +875,13 @@ export class FormBuilder {
         }
 
         this.fields.forEach(field => {
-            const validation = validateFieldConfig(field);
-            if (!validation.isValid) {
-                errors.push(...validation.errors.map(e => `${field.label}: ${e}`));
+            const result = validateFieldConfig(field);
+            if (!result.isValid) {
+                errors.push(...result.errors.map(e => `${field.label}: ${e}`));
             }
         });
 
-        return {
-            isValid: errors.length === 0,
-            errors
-        };
-    }
-
-    preview() {
-        const validation = this.validate();
-        if (!validation.isValid) {
-            toast.errors(validation.errors, 'Cannot preview:');
-            return;
-        }
-
-        // Create preview template
-        const previewTemplate = {
-            ...this.template,
-            fields: this.fields
-        };
-
-        if (this.options.onPreview) {
-            this.options.onPreview(previewTemplate);
-        } else {
-            // Default: open in modal
-            this.showPreviewModal(previewTemplate);
-        }
-    }
-
-    showPreviewModal(template) {
-        // Create modal overlay
-        const overlay = createElement('div', { className: 'form-builder-modal-overlay' });
-
-        const modal = createElement('div', { className: 'form-builder-modal form-builder-preview-modal' });
-
-        // Modal header
-        const header = createElement('div', { className: 'form-builder-modal-header' });
-        const title = createElement('h3', { textContent: 'Form Preview' });
-        const closeBtn = createElement('button', {
-            type: 'button',
-            className: 'form-builder-modal-close',
-            textContent: '×'
-        });
-
-        header.appendChild(title);
-        header.appendChild(closeBtn);
-        modal.appendChild(header);
-
-        // Modal body - render the form
-        const body = createElement('div', { className: 'form-builder-modal-body' });
-        modal.appendChild(body);
-
-        overlay.appendChild(modal);
-        document.body.appendChild(overlay);
-
-        // Render form preview
-        this.previewRenderer = new FormRenderer(body, template);
-
-        // Close handlers
-        const closeModal = () => {
-            if (this.previewRenderer) {
-                this.previewRenderer.destroy();
-                this.previewRenderer = null;
-            }
-            overlay.remove();
-        };
-
-        on(closeBtn, 'click', closeModal);
-        on(overlay, 'click', (e) => {
-            if (e.target === overlay) closeModal();
-        });
+        return { isValid: errors.length === 0, errors };
     }
 
     save() {
@@ -814,7 +891,6 @@ export class FormBuilder {
             return;
         }
 
-        // Prepare template for saving
         const templateToSave = {
             ...this.template,
             fields: this.fields
@@ -824,102 +900,54 @@ export class FormBuilder {
 
         if (result.success) {
             this.template = result.template;
-            toast.success('Template saved successfully!');
-
+            toast.success('Form saved!');
             if (this.options.onSave) {
                 this.options.onSave(result.template);
             }
         } else {
-            toast.error('Error saving template: ' + result.error);
+            toast.error('Error saving: ' + result.error);
         }
     }
 
     cancel() {
         if (this.fields.length > 0) {
-            this.showConfirmDialog(
-                'Discard Changes',
-                'Are you sure you want to discard your changes?',
-                () => {
-                    if (this.options.onCancel) {
-                        this.options.onCancel();
-                    }
-                }
-            );
-        } else if (this.options.onCancel) {
-            this.options.onCancel();
+            if (confirm('Discard changes?')) {
+                if (this.options.onCancel) this.options.onCancel();
+            }
+        } else {
+            if (this.options.onCancel) this.options.onCancel();
         }
     }
 
-    // V3: Keyboard shortcuts
     setupKeyboardShortcuts() {
-        const keydownHandler = (e) => {
-            // Ignore if typing in input
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                return;
-            }
+        const handler = (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
-            // Ctrl+S: Save
             if (e.ctrlKey && e.key === 's') {
                 e.preventDefault();
                 this.save();
             }
-
-            // Ctrl+P: Preview
-            if (e.ctrlKey && e.key === 'p') {
+            if (e.key === 'Delete' && this.selectedFieldId) {
                 e.preventDefault();
-                this.preview();
+                this.deleteField(this.selectedFieldId);
             }
-
-            // Delete: Delete selected field
-            if (e.key === 'Delete' && this.selectedFieldIndex !== null) {
-                e.preventDefault();
-                this.deleteField(this.selectedFieldIndex);
-            }
-
-            // Escape: Deselect
             if (e.key === 'Escape') {
-                this.selectedFieldIndex = null;
-                document.querySelectorAll('.form-builder-field-item').forEach(item => {
-                    item.classList.remove('selected');
-                });
+                this.deselectField();
             }
         };
 
-        document.addEventListener('keydown', keydownHandler);
-        this.cleanupFunctions.push(() => document.removeEventListener('keydown', keydownHandler));
-    }
-
-    getTemplate() {
-        return {
-            ...this.template,
-            fields: this.fields
-        };
+        document.addEventListener('keydown', handler);
+        this.cleanupFunctions.push(() => document.removeEventListener('keydown', handler));
     }
 
     cleanup() {
-        this.cleanupFunctions.forEach(cleanup => {
-            if (typeof cleanup === 'function') {
-                cleanup();
-            }
-        });
+        this.cleanupFunctions.forEach(fn => typeof fn === 'function' && fn());
         this.cleanupFunctions = [];
+        this.fieldInstances.clear();
     }
 
     destroy() {
         this.cleanup();
-
-        if (this.fieldEditor) {
-            this.fieldEditor.destroy();
-            this.fieldEditor = null;
-        }
-
-        if (this.previewRenderer) {
-            this.previewRenderer.destroy();
-            this.previewRenderer = null;
-        }
-
-        if (this.container) {
-            this.container.innerHTML = '';
-        }
+        if (this.container) this.container.innerHTML = '';
     }
 }
