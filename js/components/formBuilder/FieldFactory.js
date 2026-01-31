@@ -1,10 +1,18 @@
-// Field Factory - Creates field instances by type
+// Field Factory - Creates field instances by type (V3)
 import { TextField } from './fields/TextField.js';
 import { NumberField } from './fields/NumberField.js';
 import { SelectField } from './fields/SelectField.js';
 import { TextareaField } from './fields/TextareaField.js';
 import { PhotoField } from './fields/PhotoField.js';
 import { SignatureField } from './fields/SignatureField.js';
+// V3 New Field Types
+import { DateField } from './fields/DateField.js';
+import { TimeField } from './fields/TimeField.js';
+import { CheckboxGroupField } from './fields/CheckboxGroupField.js';
+import { RadioField } from './fields/RadioField.js';
+import { ToggleField } from './fields/ToggleField.js';
+import { SectionField } from './fields/SectionField.js';
+import { InfoField } from './fields/InfoField.js';
 
 // Field type registry
 const fieldTypes = {
@@ -12,6 +20,7 @@ const fieldTypes = {
         class: TextField,
         label: 'Text',
         icon: 'T',
+        category: 'basic',
         defaultConfig: {
             placeholder: 'Enter text...',
             maxLength: null
@@ -21,6 +30,7 @@ const fieldTypes = {
         class: NumberField,
         label: 'Number',
         icon: '#',
+        category: 'basic',
         defaultConfig: {
             placeholder: 'Enter number...',
             min: null,
@@ -32,6 +42,7 @@ const fieldTypes = {
         class: SelectField,
         label: 'Dropdown',
         icon: '▼',
+        category: 'basic',
         defaultConfig: {
             placeholder: 'Select an option...',
             options: [
@@ -44,16 +55,77 @@ const fieldTypes = {
         class: TextareaField,
         label: 'Text Area',
         icon: '¶',
+        category: 'basic',
         defaultConfig: {
             placeholder: 'Enter text...',
             rows: 4,
             maxLength: null
         }
     },
+    // V3 New Types
+    date: {
+        class: DateField,
+        label: 'Date',
+        icon: '📅',
+        category: 'basic',
+        defaultConfig: {
+            min: null,
+            max: null
+        }
+    },
+    time: {
+        class: TimeField,
+        label: 'Time',
+        icon: '🕐',
+        category: 'basic',
+        defaultConfig: {
+            min: null,
+            max: null,
+            step: null
+        }
+    },
+    checkbox: {
+        class: CheckboxGroupField,
+        label: 'Checkboxes',
+        icon: '☑',
+        category: 'choice',
+        defaultConfig: {
+            options: [
+                { value: 'option1', label: 'Option 1' },
+                { value: 'option2', label: 'Option 2' }
+            ],
+            minSelect: null,
+            maxSelect: null
+        }
+    },
+    radio: {
+        class: RadioField,
+        label: 'Radio',
+        icon: '◉',
+        category: 'choice',
+        defaultConfig: {
+            options: [
+                { value: 'option1', label: 'Option 1' },
+                { value: 'option2', label: 'Option 2' }
+            ]
+        }
+    },
+    toggle: {
+        class: ToggleField,
+        label: 'Yes/No',
+        icon: '⚡',
+        category: 'choice',
+        defaultConfig: {
+            yesLabel: 'Yes',
+            noLabel: 'No'
+        }
+    },
+    // Media types
     photo: {
         class: PhotoField,
         label: 'Photo',
         icon: '📷',
+        category: 'media',
         defaultConfig: {
             multiple: true,
             maxFiles: 5
@@ -63,9 +135,31 @@ const fieldTypes = {
         class: SignatureField,
         label: 'Signature',
         icon: '✍',
+        category: 'media',
         defaultConfig: {
             width: 300,
             height: 150
+        }
+    },
+    // Layout types
+    section: {
+        class: SectionField,
+        label: 'Section',
+        icon: '═',
+        category: 'layout',
+        defaultConfig: {
+            description: ''
+        }
+    },
+    info: {
+        class: InfoField,
+        label: 'Info',
+        icon: 'ℹ',
+        category: 'layout',
+        defaultConfig: {
+            content: 'Add helpful information here...',
+            style: 'info', // info, warning, success, error, tip
+            allowHtml: false
         }
     }
 };
@@ -88,8 +182,33 @@ export function getFieldTypes() {
     return Object.keys(fieldTypes).map(type => ({
         type,
         label: fieldTypes[type].label,
-        icon: fieldTypes[type].icon
+        icon: fieldTypes[type].icon,
+        category: fieldTypes[type].category
     }));
+}
+
+// Get field types grouped by category (V3)
+export function getFieldTypesByCategory() {
+    const categories = {
+        basic: { label: 'Basic', types: [] },
+        choice: { label: 'Choice', types: [] },
+        media: { label: 'Media', types: [] },
+        layout: { label: 'Layout', types: [] }
+    };
+
+    Object.keys(fieldTypes).forEach(type => {
+        const info = fieldTypes[type];
+        const category = info.category || 'basic';
+        if (categories[category]) {
+            categories[category].types.push({
+                type,
+                label: info.label,
+                icon: info.icon
+            });
+        }
+    });
+
+    return categories;
 }
 
 // Get default config for a field type
@@ -111,6 +230,18 @@ export function getDefaultFieldConfig(type, order = 0) {
     };
 }
 
+// V3: Generate field name from label (snake_case)
+export function generateFieldName(label) {
+    if (!label) return '';
+    return label
+        .toLowerCase()
+        .trim()
+        .replace(/[^a-z0-9\s]/g, '')  // Remove special chars
+        .replace(/\s+/g, '_')          // Replace spaces with underscores
+        .replace(/_+/g, '_')           // Remove duplicate underscores
+        .replace(/^_|_$/g, '');        // Trim leading/trailing underscores
+}
+
 // Validate field config
 export function validateFieldConfig(config) {
     const errors = [];
@@ -121,8 +252,11 @@ export function validateFieldConfig(config) {
         errors.push(`Unknown field type: ${config.type}`);
     }
 
-    if (!config.name || config.name.trim() === '') {
-        errors.push('Field name is required');
+    // Layout fields don't need name validation
+    if (!['section', 'info'].includes(config.type)) {
+        if (!config.name || config.name.trim() === '') {
+            errors.push('Field name is required');
+        }
     }
 
     if (!config.label || config.label.trim() === '') {
@@ -130,9 +264,9 @@ export function validateFieldConfig(config) {
     }
 
     // Type-specific validation
-    if (config.type === 'select') {
+    if (config.type === 'select' || config.type === 'checkbox' || config.type === 'radio') {
         if (!config.options || !Array.isArray(config.options) || config.options.length === 0) {
-            errors.push('Select field must have at least one option');
+            errors.push('Field must have at least one option');
         }
     }
 
