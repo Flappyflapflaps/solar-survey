@@ -63,25 +63,21 @@ export class FormBuilder {
         const header = this.createHeader();
         wrapper.appendChild(header);
 
-        // Main split pane
+        // Main 3-column layout: Palette | Canvas | Settings
         const main = createElement('div', { className: 'vfb-main' });
 
         // Left: Field Palette
         const palette = this.createPalette();
         main.appendChild(palette);
 
-        // Right: Canvas + Settings
-        const rightPane = createElement('div', { className: 'vfb-right-pane' });
-
-        // Canvas area
+        // Center: Canvas area
         const canvas = this.createCanvas();
-        rightPane.appendChild(canvas);
+        main.appendChild(canvas);
 
-        // Settings panel (shows when field selected)
+        // Right: Settings panel (always visible)
         const settings = this.createSettingsPanel();
-        rightPane.appendChild(settings);
+        main.appendChild(settings);
 
-        main.appendChild(rightPane);
         wrapper.appendChild(main);
 
         this.container.appendChild(wrapper);
@@ -245,26 +241,24 @@ export class FormBuilder {
             className: 'vfb-settings-panel',
             id: 'vfbSettingsPanel'
         });
-        panel.style.display = 'none';
 
         const header = createElement('div', { className: 'vfb-settings-header' });
         header.innerHTML = '<span>Field Settings</span>';
-
-        const closeBtn = createElement('button', {
-            type: 'button',
-            className: 'vfb-settings-close',
-            textContent: '×'
-        });
-        const closeCleanup = on(closeBtn, 'click', () => this.deselectField());
-        this.cleanupFunctions.push(closeCleanup);
-        header.appendChild(closeBtn);
-
         panel.appendChild(header);
 
         const body = createElement('div', {
             className: 'vfb-settings-body',
             id: 'vfbSettingsBody'
         });
+
+        // Show placeholder when no field selected
+        body.innerHTML = `
+            <div class="vfb-settings-empty">
+                <div class="vfb-settings-empty-icon">👆</div>
+                <div class="vfb-settings-empty-text">Select a field to edit its settings</div>
+            </div>
+        `;
+
         panel.appendChild(body);
 
         return panel;
@@ -488,19 +482,25 @@ export class FormBuilder {
         this.selectedFieldId = null;
         document.querySelectorAll('.vfb-canvas-field').forEach(f => f.classList.remove('selected'));
 
-        const panel = document.getElementById('vfbSettingsPanel');
-        if (panel) panel.style.display = 'none';
+        // Show empty placeholder in settings panel
+        const body = document.getElementById('vfbSettingsBody');
+        if (body) {
+            body.innerHTML = `
+                <div class="vfb-settings-empty">
+                    <div class="vfb-settings-empty-icon">👆</div>
+                    <div class="vfb-settings-empty-text">Select a field to edit its settings</div>
+                </div>
+            `;
+        }
     }
 
     showSettingsPanel(fieldId) {
         const field = this.fields.find(f => f.id === fieldId);
         if (!field) return;
 
-        const panel = document.getElementById('vfbSettingsPanel');
         const body = document.getElementById('vfbSettingsBody');
-        if (!panel || !body) return;
+        if (!body) return;
 
-        panel.style.display = 'flex';
         body.innerHTML = '';
 
         // Build settings form
