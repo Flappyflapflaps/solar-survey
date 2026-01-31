@@ -2365,6 +2365,49 @@ a:focus-visible {
     height: 18px;
 }
 
+/* Checkbox Group (for Job Completed form accounts) */
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-secondary, #f8f9fa);
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.checkbox-label:hover {
+    background: var(--bg-hover, #e9ecef);
+    border-color: var(--primary-color, #2c3e50);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary-color, #2c3e50);
+    cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"]:checked + span {
+    font-weight: 600;
+    color: var(--primary-color, #2c3e50);
+}
+
+.checkbox-label:has(input:checked) {
+    background: var(--primary-light, #e3f2fd);
+    border-color: var(--primary-color, #2c3e50);
+}
+
 /* Options Editor */
 .options-editor {
     margin-top: 1rem;

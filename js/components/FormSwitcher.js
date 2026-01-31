@@ -35,6 +35,8 @@ class FormSwitcher {
             this.solarForm = document.getElementById('surveyForm');
             this.ashpForm = document.getElementById('ashpForm');
             this.siteSurveyForm = document.getElementById('siteSurveyForm');
+            this.jobCompletedForm = document.getElementById('jobCompletedForm');
+            this.jobCompletedContainer = document.getElementById('jobCompletedContainer');
             this.customFormsContainer = document.getElementById('customFormsContainer');
             this.mainContainer = document.getElementById('mainSurveyContainer');
             this.formSelector = document.getElementById('formTypeSelector');
@@ -44,6 +46,8 @@ class FormSwitcher {
                 solarForm: !!this.solarForm,
                 ashpForm: !!this.ashpForm,
                 siteSurveyForm: !!this.siteSurveyForm,
+                jobCompletedForm: !!this.jobCompletedForm,
+                jobCompletedContainer: !!this.jobCompletedContainer,
                 customFormsContainer: !!this.customFormsContainer,
                 formSelector: !!this.formSelector,
                 formDropdown: !!this.formDropdown
@@ -57,8 +61,10 @@ class FormSwitcher {
             this.setupEventListeners();
             this.initializeASHPForm();
             this.initializeSiteSurveyForm();
+            this.initializeJobCompletedForm();
             this.loadASHPData();
             this.loadSiteSurveyData();
+            this.loadJobCompletedData();
             console.log('FormSwitcher: Initialization complete');
         } catch (error) {
             console.error('FormSwitcher: Initialization error:', error);
@@ -112,6 +118,24 @@ class FormSwitcher {
             });
         }
 
+        // Job Completed nav toggle
+        const jcNavToggle = document.getElementById('jcNavToggle');
+        const jcNavItems = document.getElementById('jcNavItems');
+        if (jcNavToggle && jcNavItems) {
+            jcNavToggle.addEventListener('click', () => {
+                jcNavItems.classList.toggle('active');
+            });
+        }
+
+        // Job Completed action menu toggle
+        const jcActionToggle = document.getElementById('jcActionMenuToggle');
+        const jcActionWrapper = document.getElementById('jcActionButtonsWrapper');
+        if (jcActionToggle && jcActionWrapper) {
+            jcActionToggle.addEventListener('click', () => {
+                jcActionWrapper.classList.toggle('active');
+            });
+        }
+
         // ASHP action buttons
         const ashpClearBtn = document.getElementById('ashpClearBtn');
         if (ashpClearBtn) {
@@ -157,6 +181,32 @@ class FormSwitcher {
         const ssExportCsvBtn = document.getElementById('ssExportCsvBtn');
         if (ssExportCsvBtn) {
             ssExportCsvBtn.addEventListener('click', () => this.exportSiteSurveyToCSV());
+        }
+
+        // Job Completed action buttons
+        const jcClearBtn = document.getElementById('jcClearBtn');
+        if (jcClearBtn) {
+            jcClearBtn.addEventListener('click', () => this.clearJobCompletedForm());
+        }
+
+        const jcSaveDraftBtn = document.getElementById('jcSaveDraftBtn');
+        if (jcSaveDraftBtn) {
+            jcSaveDraftBtn.addEventListener('click', () => this.saveJobCompletedDraft());
+        }
+
+        const jcLoadDraftBtn = document.getElementById('jcLoadDraftBtn');
+        if (jcLoadDraftBtn) {
+            jcLoadDraftBtn.addEventListener('click', () => this.loadJobCompletedDrafts());
+        }
+
+        const jcExportPdfBtn = document.getElementById('jcExportPdfBtn');
+        if (jcExportPdfBtn) {
+            jcExportPdfBtn.addEventListener('click', () => this.exportJobCompletedToPDF());
+        }
+
+        const jcExportCsvBtn = document.getElementById('jcExportCsvBtn');
+        if (jcExportCsvBtn) {
+            jcExportCsvBtn.addEventListener('click', () => this.exportJobCompletedToCSV());
         }
 
         // Defect Free conditional field (ASHP)
@@ -359,6 +409,7 @@ class FormSwitcher {
             if (this.solarForm) this.solarForm.style.display = 'block';
             if (this.ashpForm) this.ashpForm.style.display = 'none';
             if (this.siteSurveyForm) this.siteSurveyForm.style.display = 'none';
+            if (this.jobCompletedContainer) this.jobCompletedContainer.style.display = 'none';
             if (this.customFormsContainer) this.customFormsContainer.style.display = 'none';
             if (solarNav) solarNav.style.display = 'block';
             if (siteSurveyNav) siteSurveyNav.style.display = 'none';
@@ -369,6 +420,7 @@ class FormSwitcher {
             if (this.solarForm) this.solarForm.style.display = 'none';
             if (this.ashpForm) this.ashpForm.style.display = 'none';
             if (this.siteSurveyForm) this.siteSurveyForm.style.display = 'block';
+            if (this.jobCompletedContainer) this.jobCompletedContainer.style.display = 'none';
             if (this.customFormsContainer) this.customFormsContainer.style.display = 'none';
             if (solarNav) solarNav.style.display = 'none';
             if (siteSurveyNav) siteSurveyNav.style.display = 'block';
@@ -379,12 +431,18 @@ class FormSwitcher {
             if (this.solarForm) this.solarForm.style.display = 'none';
             if (this.ashpForm) this.ashpForm.style.display = 'block';
             if (this.siteSurveyForm) this.siteSurveyForm.style.display = 'none';
+            if (this.jobCompletedContainer) this.jobCompletedContainer.style.display = 'none';
             if (this.customFormsContainer) this.customFormsContainer.style.display = 'none';
             if (solarNav) solarNav.style.display = 'none';
             if (siteSurveyNav) siteSurveyNav.style.display = 'none';
             if (header) header.style.display = 'block';
+        } else if (formType === 'jobCompleted') {
+            if (this.mainContainer) this.mainContainer.style.display = 'none';
+            if (this.jobCompletedContainer) this.jobCompletedContainer.style.display = 'block';
+            if (this.customFormsContainer) this.customFormsContainer.style.display = 'none';
         } else if (formType === 'custom') {
             if (this.mainContainer) this.mainContainer.style.display = 'none';
+            if (this.jobCompletedContainer) this.jobCompletedContainer.style.display = 'none';
             if (this.customFormsContainer) this.customFormsContainer.style.display = 'block';
         }
 
@@ -392,6 +450,8 @@ class FormSwitcher {
             solarForm: this.solarForm?.style.display,
             ashpForm: this.ashpForm?.style.display,
             siteSurveyForm: this.siteSurveyForm?.style.display,
+            jobCompletedForm: this.jobCompletedForm?.style.display,
+            jobCompletedContainer: this.jobCompletedContainer?.style.display,
             customForms: this.customFormsContainer?.style.display
         });
 
@@ -1057,6 +1117,370 @@ class FormSwitcher {
         const customerName = data.ssCustomerName || 'Unknown';
         const date = new Date().toISOString().split('T')[0];
         link.download = `Site_Survey_${customerName.replace(/[^a-zA-Z0-9]/g, '_')}_${date}.csv`;
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
+    // ==================== JOB COMPLETED METHODS ====================
+
+    initializeJobCompletedForm() {
+        if (!this.jobCompletedForm) {
+            console.log('FormSwitcher: Job Completed form not found, skipping initialization');
+            return;
+        }
+
+        try {
+            // Initialize button groups for Job Completed form
+            console.log('FormSwitcher: Initializing Job Completed button groups...');
+            this.jobCompletedButtonGroups = initializeButtonGroups(this.jobCompletedForm, () => {
+                this.autoSaveJobCompleted();
+            });
+            console.log('FormSwitcher: Job Completed button groups initialized');
+
+            // Initialize quick options for Job Completed form
+            this.initializeJobCompletedQuickOptions();
+
+            // Initialize signature pads for Job Completed form
+            this.initializeJobCompletedSignaturePads();
+
+        } catch (error) {
+            console.error('FormSwitcher: Error initializing Job Completed form:', error);
+        }
+
+        // Auto-save on input
+        this.jobCompletedAutoSaveDebounced = debounce(() => this.autoSaveJobCompleted(), 2000);
+        this.jobCompletedForm.addEventListener('input', this.jobCompletedAutoSaveDebounced);
+        this.jobCompletedForm.addEventListener('change', this.jobCompletedAutoSaveDebounced);
+    }
+
+    initializeJobCompletedQuickOptions() {
+        // Quick options for Job Completed form
+        const quickOptionsContainers = this.jobCompletedForm.querySelectorAll('.quick-options');
+        quickOptionsContainers.forEach(container => {
+            const targetId = container.dataset.target;
+            const targetInput = document.getElementById(targetId);
+            if (!targetInput) return;
+
+            container.querySelectorAll('.quick-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    targetInput.value = btn.textContent.trim();
+                    targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+                });
+            });
+        });
+    }
+
+    initializeJobCompletedSignaturePads() {
+        console.log('FormSwitcher: Initializing Job Completed signature pads...');
+        const customerCanvas = document.getElementById('jcCustomerSignature');
+        const installerCanvas = document.getElementById('jcInstallerSignature');
+
+        if (customerCanvas) {
+            this.signaturePads.jcCustomer = this.createSignaturePad(customerCanvas, 'jcCustomerSignatureData');
+        }
+        if (installerCanvas) {
+            this.signaturePads.jcInstaller = this.createSignaturePad(installerCanvas, 'jcInstallerSignatureData');
+        }
+    }
+
+    collectJobCompletedData() {
+        if (!this.jobCompletedForm) return {};
+
+        const formData = new FormData(this.jobCompletedForm);
+        const data = {};
+
+        for (const [key, value] of formData.entries()) {
+            data[key] = value;
+        }
+
+        // Get hidden input values (button groups)
+        this.jobCompletedForm.querySelectorAll('input[type="hidden"]').forEach(input => {
+            if (input.name && input.value) {
+                data[input.name] = input.value;
+            }
+        });
+
+        // Get checkbox values for accounts
+        const accountCheckboxes = ['jcAccountGivEnergy', 'jcAccountFoxESS', 'jcAccountEcoflow', 'jcAccountTigo', 'jcAccountOther'];
+        accountCheckboxes.forEach(name => {
+            const checkbox = this.jobCompletedForm.querySelector(`input[name="${name}"]`);
+            if (checkbox) {
+                data[name] = checkbox.checked ? checkbox.value : '';
+            }
+        });
+
+        return data;
+    }
+
+    autoSaveJobCompleted() {
+        const data = this.collectJobCompletedData();
+        localStorage.setItem(JOB_COMPLETED_STORAGE_KEY, JSON.stringify(data));
+        this.showSaveIndicator();
+    }
+
+    loadJobCompletedData() {
+        const savedData = localStorage.getItem(JOB_COMPLETED_STORAGE_KEY);
+        if (!savedData) return;
+
+        try {
+            const data = JSON.parse(savedData);
+            this.populateJobCompletedForm(data);
+        } catch (e) {
+            console.error('Error loading Job Completed data:', e);
+        }
+    }
+
+    populateJobCompletedForm(data) {
+        if (!this.jobCompletedForm || !data) return;
+
+        Object.entries(data).forEach(([key, value]) => {
+            const element = this.jobCompletedForm.querySelector(`[name="${key}"]`);
+            if (!element) return;
+
+            if (element.type === 'checkbox') {
+                element.checked = !!value;
+            } else if (element.type === 'hidden') {
+                element.value = value;
+                // Update button group visual state
+                const buttons = this.jobCompletedForm.querySelectorAll(`[data-field="${key}"]`);
+                buttons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.value === value);
+                });
+            } else if (element.tagName === 'SELECT') {
+                element.value = value;
+            } else if (element.tagName === 'TEXTAREA') {
+                element.value = value;
+            } else {
+                element.value = value;
+            }
+
+            // Load signature data
+            if (key.endsWith('SignatureData') && value) {
+                const canvasId = key.replace('Data', '');
+                const canvas = document.getElementById(canvasId);
+                if (canvas) {
+                    const img = new Image();
+                    img.onload = () => {
+                        const ctx = canvas.getContext('2d');
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.drawImage(img, 0, 0);
+                    };
+                    img.src = value;
+                }
+            }
+        });
+    }
+
+    clearJobCompletedForm() {
+        if (!confirm('Are you sure you want to clear the Job Completed form? This cannot be undone.')) {
+            return;
+        }
+
+        if (this.jobCompletedForm) {
+            this.jobCompletedForm.reset();
+
+            // Clear hidden inputs
+            this.jobCompletedForm.querySelectorAll('input[type="hidden"]').forEach(input => {
+                input.value = '';
+            });
+
+            // Clear button group selections
+            this.jobCompletedForm.querySelectorAll('.btn-choice').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Clear signature pads
+            ['jcCustomerSignature', 'jcInstallerSignature'].forEach(id => {
+                const canvas = document.getElementById(id);
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            });
+        }
+
+        localStorage.removeItem(JOB_COMPLETED_STORAGE_KEY);
+    }
+
+    saveJobCompletedDraft() {
+        const name = prompt('Enter a name for this draft:');
+        if (!name) return;
+
+        const data = this.collectJobCompletedData();
+        const drafts = this.getJobCompletedDrafts();
+
+        const draft = {
+            id: Date.now().toString(),
+            name,
+            data,
+            createdAt: new Date().toISOString()
+        };
+
+        drafts.push(draft);
+        localStorage.setItem('jobCompletedDrafts', JSON.stringify(drafts));
+        alert('Draft saved successfully!');
+    }
+
+    getJobCompletedDrafts() {
+        const drafts = localStorage.getItem('jobCompletedDrafts');
+        return drafts ? JSON.parse(drafts) : [];
+    }
+
+    loadJobCompletedDrafts() {
+        const drafts = this.getJobCompletedDrafts();
+        if (drafts.length === 0) {
+            alert('No saved drafts found.');
+            return;
+        }
+
+        const draftList = drafts.map((d, i) => `${i + 1}. ${d.name} (${new Date(d.createdAt).toLocaleDateString()})`).join('\n');
+        const choice = prompt(`Select a draft to load:\n\n${draftList}\n\nEnter number:`);
+
+        if (!choice) return;
+
+        const index = parseInt(choice) - 1;
+        if (index >= 0 && index < drafts.length) {
+            this.populateJobCompletedForm(drafts[index].data);
+            alert('Draft loaded successfully!');
+        }
+    }
+
+    async exportJobCompletedToPDF() {
+        const data = this.collectJobCompletedData();
+
+        // Use jsPDF if available
+        if (typeof window.jspdf === 'undefined') {
+            alert('PDF library not loaded. Please try again.');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Title
+        doc.setFontSize(18);
+        doc.text('Job Completed Sheet', 105, 20, { align: 'center' });
+
+        // Add content
+        doc.setFontSize(10);
+        let y = 35;
+
+        const addSection = (title, fields) => {
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text(title, 14, y);
+            y += 7;
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+
+            fields.forEach(([label, key]) => {
+                const value = data[key] || 'N/A';
+                doc.text(`${label}: ${value}`, 14, y);
+                y += 5;
+                if (y > 280) {
+                    doc.addPage();
+                    y = 20;
+                }
+            });
+            y += 5;
+        };
+
+        addSection('Customer Details', [
+            ['Customer Name', 'jcCustomerName'],
+            ['Job Ref', 'jcJobRef'],
+            ['Address', 'jcAddress'],
+            ['Post Code', 'jcPostCode']
+        ]);
+
+        addSection('Installation Details', [
+            ['Inverter & Battery Location', 'jcInverterBatteryLocation'],
+            ['Inverter', 'jcInverter'],
+            ['Battery', 'jcBattery'],
+            ['Panels', 'jcPanels'],
+            ['Tigo Quantity', 'jcTigoQuantity'],
+            ['WiFi Extender', 'jcWifiExtender']
+        ]);
+
+        addSection('String 1', [
+            ['Panels', 'jcString1Panels'],
+            ['Orientation', 'jcString1Orientation'],
+            ['Inclination', 'jcString1Inclination']
+        ]);
+
+        addSection('String 2', [
+            ['Panels', 'jcString2Panels'],
+            ['Orientation', 'jcString2Orientation'],
+            ['Inclination', 'jcString2Inclination']
+        ]);
+
+        addSection('Smoke Alarms', [
+            ['Smoke Alarms Fitted', 'jcSmokeAlarmsFitted'],
+            ['Type', 'jcSmokeAlarmType'],
+            ['Number', 'jcSmokeAlarmNumber']
+        ]);
+
+        // Accounts section
+        const accounts = [];
+        if (data.jcAccountGivEnergy) accounts.push('GivEnergy');
+        if (data.jcAccountFoxESS) accounts.push('FoxESS');
+        if (data.jcAccountEcoflow) accounts.push('Ecoflow');
+        if (data.jcAccountTigo) accounts.push('Tigo');
+        if (data.jcAccountOther) accounts.push(`Other: ${data.jcAccountOtherSpec || ''}`);
+
+        addSection('Commission', [
+            ['Site Commissioned', 'jcSiteCommissioned'],
+            ['Username', 'jcUsername'],
+            ['Password', 'jcPassword'],
+            ['Accounts Set Up', accounts.join(', ') || 'None'],
+            ['Installers', 'jcInstallers']
+        ]);
+
+        addSection('Customer Feedback', [
+            ['Feedback', 'jcCustomerFeedback']
+        ]);
+
+        // Add signatures if present
+        if (data.jcCustomerSignatureData) {
+            doc.addPage();
+            doc.setFontSize(12);
+            doc.text('Customer Signature:', 14, 20);
+            doc.addImage(data.jcCustomerSignatureData, 'PNG', 14, 25, 80, 40);
+            doc.text(`Date: ${data.jcCustomerSignatureDate || 'N/A'}`, 14, 70);
+        }
+
+        if (data.jcInstallerSignatureData) {
+            const sigY = data.jcCustomerSignatureData ? 85 : 20;
+            doc.text('Installer Signature:', 14, sigY);
+            doc.addImage(data.jcInstallerSignatureData, 'PNG', 14, sigY + 5, 80, 40);
+            doc.text(`Date: ${data.jcInstallerSignatureDate || 'N/A'}`, 14, sigY + 50);
+        }
+
+        // Generate filename
+        const customerName = data.jcCustomerName || 'Unknown';
+        const jobRef = data.jcJobRef || '';
+        const date = new Date().toISOString().split('T')[0];
+        const filename = `Job_Completed_${customerName.replace(/[^a-zA-Z0-9]/g, '_')}${jobRef ? '_' + jobRef : ''}_${date}.pdf`;
+
+        doc.save(filename);
+    }
+
+    exportJobCompletedToCSV() {
+        const data = this.collectJobCompletedData();
+
+        // Create CSV content
+        const headers = Object.keys(data);
+        const values = Object.values(data).map(v => `"${(v || '').toString().replace(/"/g, '""')}"`);
+
+        const csvContent = headers.join(',') + '\n' + values.join(',');
+
+        // Create and download file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const customerName = data.jcCustomerName || 'Unknown';
+        const jobRef = data.jcJobRef || '';
+        const date = new Date().toISOString().split('T')[0];
+        link.download = `Job_Completed_${customerName.replace(/[^a-zA-Z0-9]/g, '_')}${jobRef ? '_' + jobRef : ''}_${date}.csv`;
         link.href = URL.createObjectURL(blob);
         link.click();
         URL.revokeObjectURL(link.href);
