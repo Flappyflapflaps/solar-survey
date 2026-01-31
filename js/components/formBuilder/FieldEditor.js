@@ -1,6 +1,7 @@
-// Field Editor - Modal for editing field properties
+// Field Editor V3 - Modal for editing field properties
+// Enhanced to support all V3 field types
 import { createElement, on } from '../../utils/dom.js';
-import { fieldTypes } from './FieldFactory.js';
+import { fieldTypes, generateFieldName } from './FieldFactory.js';
 
 export class FieldEditor {
     constructor(fieldConfig, onSave) {
@@ -74,22 +75,60 @@ export class FieldEditor {
             if (e.target === this.overlay) this.close();
         });
         this.cleanupFunctions.push(overlayCleanup);
+
+        // Escape key to close
+        const escCleanup = on(document, 'keydown', (e) => {
+            if (e.key === 'Escape') this.close();
+        });
+        this.cleanupFunctions.push(escCleanup);
     }
 
     createFormFields(container) {
-        // Label field
-        container.appendChild(this.createInputField('label', 'Label', 'text', this.config.label, true));
+        // Label field with auto-name generation hint
+        const labelGroup = this.createInputField('label', 'Label', 'text', this.config.label, true);
+        const labelInput = labelGroup.querySelector('input');
+        const labelHint = createElement('small', {
+            className: 'field-hint',
+            textContent: 'Field name will auto-generate from label'
+        });
+        labelGroup.appendChild(labelHint);
 
-        // Name field
-        container.appendChild(this.createInputField('name', 'Field Name (data key)', 'text', this.config.name, true));
+        // Auto-generate name when label changes
+        const labelChangeCleanup = on(labelInput, 'input', () => {
+            if (!this.config.nameManuallySet) {
+                const generatedName = generateFieldName(labelInput.value);
+                const nameInput = container.querySelector('#field-name');
+                if (nameInput) {
+                    nameInput.value = generatedName;
+                    this.config.name = generatedName;
+                }
+            }
+        });
+        this.cleanupFunctions.push(labelChangeCleanup);
+        container.appendChild(labelGroup);
 
-        // Placeholder field (not for signature/photo)
-        if (!['signature', 'photo'].includes(this.config.type)) {
+        // Name field (data key) - only for non-layout fields
+        if (!['section', 'info'].includes(this.config.type)) {
+            const nameGroup = this.createInputField('name', 'Field Name (data key)', 'text', this.config.name, true);
+            const nameInput = nameGroup.querySelector('input');
+
+            // Mark name as manually set when user edits it
+            const nameEditCleanup = on(nameInput, 'input', () => {
+                this.config.nameManuallySet = true;
+            });
+            this.cleanupFunctions.push(nameEditCleanup);
+            container.appendChild(nameGroup);
+        }
+
+        // Placeholder field (for text-based inputs)
+        if (['text', 'number', 'textarea', 'select'].includes(this.config.type)) {
             container.appendChild(this.createInputField('placeholder', 'Placeholder', 'text', this.config.placeholder || ''));
         }
 
-        // Required checkbox
-        container.appendChild(this.createCheckboxField('required', 'Required', this.config.required));
+        // Required checkbox (not for layout types)
+        if (!['section', 'info'].includes(this.config.type)) {
+            container.appendChild(this.createCheckboxField('required', 'Required', this.config.required));
+        }
 
         // Type-specific fields
         this.createTypeSpecificFields(container);
@@ -98,32 +137,81 @@ export class FieldEditor {
     createTypeSpecificFields(container) {
         const type = this.config.type;
 
+        // Number fields
         if (type === 'number') {
             container.appendChild(this.createInputField('min', 'Minimum Value', 'number', this.config.min));
             container.appendChild(this.createInputField('max', 'Maximum Value', 'number', this.config.max));
             container.appendChild(this.createInputField('step', 'Step', 'number', this.config.step));
         }
 
+        // Textarea fields
         if (type === 'textarea') {
             container.appendChild(this.createInputField('rows', 'Rows', 'number', this.config.rows || 4));
         }
 
+        // Text length
         if (type === 'text' || type === 'textarea') {
             container.appendChild(this.createInputField('maxLength', 'Max Length', 'number', this.config.maxLength));
         }
 
-        if (type === 'select') {
+        // Select, Checkbox, Radio options
+        if (type === 'select' || type === 'checkbox' || type === 'radio') {
             container.appendChild(this.createOptionsEditor());
         }
 
+        // Checkbox group specific
+        if (type === 'checkbox') {
+            container.appendChild(this.createInputField('minSelect', 'Min Selections', 'number', this.config.minSelect));
+            container.appendChild(this.createInputField('maxSelect', 'Max Selections', 'number', this.config.maxSelect));
+        }
+
+        // Date fields
+        if (type === 'date') {
+            container.appendChild(this.createInputField('min', 'Earliest Date', 'date', this.config.min));
+            container.appendChild(this.createInputField('max', 'Latest Date', 'date', this.config.max));
+        }
+
+        // Time fields
+        if (type === 'time') {
+            container.appendChild(this.createInputField('min', 'Earliest Time', 'time', this.config.min));
+            container.appendChild(this.createInputField('max', 'Latest Time', 'time', this.config.max));
+            container.appendChild(this.createInputField('step', 'Step (seconds)', 'number', this.config.step));
+        }
+
+        // Toggle fields
+        if (type === 'toggle') {
+            container.appendChild(this.createInputField('yesLabel', 'Yes Label', 'text', this.config.yesLabel || 'Yes'));
+            container.appendChild(this.createInputField('noLabel', 'No Label', 'text', this.config.noLabel || 'No'));
+        }
+
+        // Photo fields
         if (type === 'photo') {
             container.appendChild(this.createCheckboxField('multiple', 'Allow Multiple Photos', this.config.multiple));
             container.appendChild(this.createInputField('maxFiles', 'Max Files', 'number', this.config.maxFiles || 5));
         }
 
+        // Signature fields
         if (type === 'signature') {
             container.appendChild(this.createInputField('width', 'Width (px)', 'number', this.config.width || 300));
             container.appendChild(this.createInputField('height', 'Height (px)', 'number', this.config.height || 150));
+        }
+
+        // Section fields
+        if (type === 'section') {
+            container.appendChild(this.createTextareaField('description', 'Section Description', this.config.description || ''));
+        }
+
+        // Info fields
+        if (type === 'info') {
+            container.appendChild(this.createTextareaField('content', 'Content', this.config.content || ''));
+            container.appendChild(this.createSelectField('style', 'Style', this.config.style || 'info', [
+                { value: 'info', label: 'Info (Blue)' },
+                { value: 'warning', label: 'Warning (Yellow)' },
+                { value: 'success', label: 'Success (Green)' },
+                { value: 'error', label: 'Error (Red)' },
+                { value: 'tip', label: 'Tip (Purple)' }
+            ]));
+            container.appendChild(this.createCheckboxField('allowHtml', 'Allow HTML Content', this.config.allowHtml));
         }
     }
 
@@ -145,7 +233,7 @@ export class FieldEditor {
 
         const cleanup = on(input, 'input', (e) => {
             let val = e.target.value;
-            if (type === 'number' && val !== '') {
+            if ((type === 'number') && val !== '') {
                 val = parseFloat(val);
                 if (isNaN(val)) val = null;
             }
@@ -155,6 +243,67 @@ export class FieldEditor {
 
         group.appendChild(labelEl);
         group.appendChild(input);
+        return group;
+    }
+
+    createTextareaField(name, label, value) {
+        const group = createElement('div', { className: 'form-group' });
+
+        const labelEl = createElement('label', {
+            htmlFor: `field-${name}`,
+            textContent: label
+        });
+
+        const textarea = createElement('textarea', {
+            id: `field-${name}`,
+            name,
+            className: 'form-builder-input form-builder-textarea',
+            rows: 3
+        });
+        textarea.value = value || '';
+
+        const cleanup = on(textarea, 'input', (e) => {
+            this.config[name] = e.target.value;
+        });
+        this.cleanupFunctions.push(cleanup);
+
+        group.appendChild(labelEl);
+        group.appendChild(textarea);
+        return group;
+    }
+
+    createSelectField(name, label, value, options) {
+        const group = createElement('div', { className: 'form-group' });
+
+        const labelEl = createElement('label', {
+            htmlFor: `field-${name}`,
+            textContent: label
+        });
+
+        const select = createElement('select', {
+            id: `field-${name}`,
+            name,
+            className: 'form-builder-input form-builder-select'
+        });
+
+        options.forEach(opt => {
+            const option = createElement('option', {
+                value: opt.value,
+                textContent: opt.label
+            });
+            if (opt.value === value) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        });
+
+        const cleanup = on(select, 'change', (e) => {
+            this.config[name] = e.target.value;
+        });
+        this.cleanupFunctions.push(cleanup);
+
+        group.appendChild(labelEl);
+        group.appendChild(select);
         return group;
     }
 
@@ -203,7 +352,7 @@ export class FieldEditor {
         // Add option button
         const addBtn = createElement('button', {
             type: 'button',
-            className: 'btn-secondary btn-small',
+            className: 'btn-secondary btn-small add-option-btn',
             textContent: '+ Add Option'
         });
 
@@ -239,7 +388,8 @@ export class FieldEditor {
         const removeBtn = createElement('button', {
             type: 'button',
             className: 'option-remove-btn',
-            textContent: '×'
+            textContent: '×',
+            title: 'Remove option'
         });
 
         const valueCleanup = on(valueInput, 'input', (e) => {
@@ -285,13 +435,16 @@ export class FieldEditor {
             errors.push('Label is required');
         }
 
-        if (!this.config.name || this.config.name.trim() === '') {
-            errors.push('Field name is required');
+        // Only validate name for non-layout fields
+        if (!['section', 'info'].includes(this.config.type)) {
+            if (!this.config.name || this.config.name.trim() === '') {
+                errors.push('Field name is required');
+            }
         }
 
-        if (this.config.type === 'select') {
+        if (this.config.type === 'select' || this.config.type === 'checkbox' || this.config.type === 'radio') {
             if (!this.config.options || this.config.options.length === 0) {
-                errors.push('Select field must have at least one option');
+                errors.push('At least one option is required');
             }
         }
 
@@ -301,7 +454,16 @@ export class FieldEditor {
     save() {
         const errors = this.validate();
         if (errors.length > 0) {
-            alert('Please fix the following errors:\n' + errors.join('\n'));
+            // Use simple styled alert for now - toast would be better
+            const errorDiv = this.modal.querySelector('.field-editor-errors');
+            if (errorDiv) {
+                errorDiv.innerHTML = errors.map(e => `<div class="error-item">${e}</div>`).join('');
+                errorDiv.style.display = 'block';
+            } else {
+                const newErrorDiv = createElement('div', { className: 'field-editor-errors' });
+                newErrorDiv.innerHTML = errors.map(e => `<div class="error-item">${e}</div>`).join('');
+                this.modal.querySelector('.form-builder-modal-body').prepend(newErrorDiv);
+            }
             return;
         }
 
